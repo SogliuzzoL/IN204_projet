@@ -1,4 +1,4 @@
-#include "GameWindow.hpp"
+#include "Engine/GameWindow.hpp"
 #include <SDL2/SDL.h>
 
 bool GameWindow::initialize() {
