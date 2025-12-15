@@ -11,3 +11,5 @@ public:
   bool initialize();
   void kill();
 };
+
+void sdl_test ();

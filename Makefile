@@ -26,6 +26,9 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.$(EXT)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+run: $(EXEC)
+	./$(EXEC)
+
 clean:
 	@echo "Nettoyage..."
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
