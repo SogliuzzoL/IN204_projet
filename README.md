@@ -18,7 +18,7 @@ Ces quatres parties permettront d'avoir un jeu complet, bien decoupe en fonction
 
 _Le Jeu_ : Les calculs du Gamesense seront fait cote serveur et ceux-ci seront la fondation du jeu
 
-_Le rendu Graphique_ : Le jeu est en 2.5D, c'est a dire q'il est equivalent a un jeu 2D, mais le renderer permet d'avoir une visualisation 3D pour le client
+_Le rendu Graphique_ : Le jeu est en 2.5D, c'est a dire q'il est equivalent a un jeu 2D, mais le renderer permet d'avoir une visualisation 3D pour le client. Il met a jour ses donnes de jeu a partir du serveur. 
 
 #### todo
 
