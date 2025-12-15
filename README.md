@@ -26,11 +26,5 @@ Ouvrez un terminal et exécutez les commandes suivantes pour mettre à jour votr
 
 ```bash
 sudo pacman -Syu
-sudo pacman -S --needed gcc make git \
-    sdl2 \
-    sdl2_image \
-    sdl2_net \
-    sdl2_mixer \
-    sdl2_ttf \
-    sdl2_gfx
+sudo pacman -S sdl2 sdl2_image sdl2_mixer sdl2_ttf
 ```
