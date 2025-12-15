@@ -21,8 +21,7 @@ $(EXEC): $(OBJS)
 	@echo "Succès ! Exécutable : $@"
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.$(EXT)
-	@echo "🔨 Compilation de $<"
-	# mkdir -p $(dir $@) crée le sous-dossier s'il n'existe pas
+	@echo "Compilation de $<"
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
