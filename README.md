@@ -1,5 +1,31 @@
 # Projet IN204
 
+## Descriptif du projet
+
+### Overview
+
+Le but du projet est de faire un clone du jeu Doom (1993). Ce jeu etait tres innovant pour l'epoque et beaucoup
+d'innovations qu'il a apporte sont utilises dans les jeu modernes.
+C'est un jeu en 2.5D (cf paragraphe suivant) qui suit l'histoire d'un soldat qui se bat contre des monstres dans un bunker.
+Sa pertinence pour le cours de in204 est qu'il permettra par sa multitude de features d'utiliser pleinement les tenants de la
+programation orientee objet (OOP).
+
+### Plan du projet
+
+le projet se decoup en 4 parties largement independantes.
+le jeu, le rendu graphique, le network et le controleur de jeu.
+Ces quatres parties permettront d'avoir un jeu complet, bien decoupe en fonctions unitaires et separees.
+
+_Le Jeu_ : Les calculs du Gamesense seront fait cote serveur et ceux-ci seront la fondation du jeu
+
+_Le rendu Graphique_ : Le jeu est en 2.5D, c'est a dire q'il est equivalent a un jeu 2D, mais le renderer permet d'avoir une visualisation 3D pour le client
+
+#### todo
+
+_Le network_
+
+_Le Controleur de jeu_
+
 ## Installation des dépendances (SDL2)
 
 Ce projet nécessite la bibliothèque SDL2 pour fonctionner.
