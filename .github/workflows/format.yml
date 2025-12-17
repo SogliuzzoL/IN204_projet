@@ -1,0 +1,21 @@
+name: Formatage Automatique C++
+
+on: [push, pull_request]
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run clang-format style check
+        uses: jidicula/clang-format-action@v4.11.0
+        with:
+          clang-format-version: '15'
+          check-path: '.'
+          fallback-style: 'Google'
+          
+      - name: Commit changes (si nécessaire)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "style: application du formatage clang-format"

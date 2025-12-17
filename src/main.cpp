@@ -1,5 +1,6 @@
-#include "Engine/GameWindow.hpp"
 #include <iostream>
+
+#include "Engine/GameWindow.hpp"
 
 int main() {
   GameWindow window(1920, 1080, "DOOM");
