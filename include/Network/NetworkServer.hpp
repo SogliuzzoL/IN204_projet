@@ -8,18 +8,17 @@
 
 class NetworkServer : public Network {
  private:
-  TCPsocket serverSocket;
-  SDLNet_SocketSet socketSet;
-  std::vector<TCPsocket> clients;
+  UDPsocket serverSocket;
+  UDPpacket* packet;
+  std::vector<IPaddress> clients;
 
  public:
   /**
    * Start the network server.
-   * @param host The host address to bind.
-   * @param port The port number to bind.
+   * @param port The port number to bind the server to.
    * @return true if the server started successfully, false otherwise.
    */
-  bool start(const char* host, int port) override;
+  bool start(int port);
 
   /**
    * Stop the network server.
@@ -27,7 +26,16 @@ class NetworkServer : public Network {
   void stop() override;
 
   /**
-   * Handle new incoming connections.
+   * Handle incoming data from clients.
+   * @return 1 if a new packet is available, or -1 on error. 0 means no packets
+   * were currently available.
    */
-  void handleNewConnections();
+  int handleIncomingData();
+
+  /**
+   * Send a message to all connected clients.
+   * @param message The message to send.
+   * @return true if the message was sent successfully, false otherwise.
+   */
+  bool sendData(const std::string& message) override;
 };

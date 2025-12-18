@@ -9,12 +9,18 @@ class Network {
   bool initialize();
 
   /**
-   * Pure virtual method to start the network (server or client).
-   * @param host The host address to connect to or bind.
-   * @param port The port number to connect to or bind.
-   * @return true if the network started successfully, false otherwise.
+   * Pure virtual method to handle incoming data.
+   * @return 1 if a new packet is available, or -1 on error. 0 means no packets
+   * were currently available.
    */
-  virtual bool start(const char* host, int port) = 0;
+  virtual int handleIncomingData() = 0;
+
+  /**
+   * Pure virtual method to send data.
+   * @param message The message to send.
+   * @return true if the message was sent successfully, false otherwise.
+   */
+  virtual bool sendData(const std::string& message) = 0;
 
   /**
    * Pure virtual method to stop the network (server or client).

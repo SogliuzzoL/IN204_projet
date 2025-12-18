@@ -4,59 +4,70 @@
 
 #include <iostream>
 
-bool NetworkServer::start(const char* host, int port) {
-  // Resolve the host and port
-  IPaddress ip;
-  if (SDLNet_ResolveHost(&ip, host, port) == -1) return false;
-
+bool NetworkServer::start(int port) {
   // Open the server socket
-  serverSocket = SDLNet_TCP_Open(&ip);
+  serverSocket = SDLNet_UDP_Open(port);
   if (serverSocket == nullptr) return false;
 
-  // Allocate a socket set
-  socketSet = SDLNet_AllocSocketSet(10);
-  if (socketSet == nullptr) return false;
-
-  // Add the server socket to the socket set
-  if (SDLNet_TCP_AddSocket(socketSet, serverSocket) == -1) return false;
+  // Allocate the packet
+  packet = SDLNet_AllocPacket(512);
+  if (packet == nullptr) return false;
 
   return true;
 }
 
 void NetworkServer::stop() {
-  // Close all client sockets
-  for (auto& client : clients) {
-    SDLNet_TCP_Close(client);
-  }
-  clients.clear();
+  // Free the packet
+  if (packet != nullptr) SDLNet_FreePacket(packet);
 
-  // Close the server socket and free the socket set
-  if (serverSocket != nullptr) {
-    SDLNet_TCP_Close(serverSocket);
-    serverSocket = nullptr;
-  }
-
-  // Free the socket set
-  if (socketSet != nullptr) {
-    SDLNet_FreeSocketSet(socketSet);
-    socketSet = nullptr;
-  }
+  // Close the server socket
+  if (serverSocket != nullptr) SDLNet_UDP_Close(serverSocket);
 }
 
-void NetworkServer::handleNewConnections() {
-  // Check for ready sockets
-  int numReady = SDLNet_CheckSockets(socketSet, 0);
+int NetworkServer::handleIncomingData() {
+  int received = SDLNet_UDP_Recv(serverSocket, packet);
+  // Check for incoming packets
+  if (received) {
+    // Get sender's IP address and port
+    const char* senderIP = SDLNet_ResolveIP(&packet->address);
+    Uint16 port = SDLNet_Read16(&packet->address.port);
 
-  // If the server socket is ready, accept new connections
-  if (numReady > 0) {
-    if (SDLNet_SocketReady(serverSocket)) {
-      TCPsocket newClient = SDLNet_TCP_Accept(serverSocket);
-      // Add the new client to the list and socket set
-      if (newClient != nullptr) {
-        clients.push_back(newClient);
-        SDLNet_TCP_AddSocket(socketSet, newClient);
-        std::cout << "New client connected." << std::endl;
+    // Process the received packet
+    std::cout << "Paquet reçu de " << senderIP << ":" << port << " | "
+              << packet->data << std::endl;
+
+    // Add new client to the list if not already present
+    bool clientExists = false;
+    for (const auto& clientAddr : clients) {
+      if (clientAddr.host == packet->address.host &&
+          clientAddr.port == packet->address.port) {
+        clientExists = true;
+        break;
       }
     }
+    if (!clientExists) {
+      clients.push_back(packet->address);
+    }
   }
+  return received;
+}
+
+bool NetworkServer::sendData(const std::string& message) {
+  // Send the message to all connected clients
+  for (const auto& clientAddr : clients) {
+    UDPpacket* sendPacket = SDLNet_AllocPacket(512);
+    if (sendPacket == nullptr) return false;
+
+    sendPacket->address = clientAddr;
+    sendPacket->len = message.size() + 1;  // +1 for null terminator
+    memcpy(sendPacket->data, message.c_str(), sendPacket->len);
+
+    if (SDLNet_UDP_Send(serverSocket, -1, sendPacket) == 0) {
+      SDLNet_FreePacket(sendPacket);
+      return false;
+    }
+
+    SDLNet_FreePacket(sendPacket);
+  }
+  return true;
 }
