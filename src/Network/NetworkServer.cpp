@@ -15,4 +15,4 @@ bool NetworkServer::start(const char* host, int port) {
   return true;
 }
 
-void NetworkServer::stop() { return; }
+void NetworkServer::stop() { std::cout << "Stopping server..." << std::endl; }
