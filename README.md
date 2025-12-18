@@ -20,11 +20,9 @@ _Le Jeu_ : Les calculs du Gamesense seront fait cote serveur et ceux-ci seront l
 
 _Le rendu Graphique_ : Le jeu est en 2.5D, c'est a dire q'il est equivalent a un jeu 2D, mais le renderer permet d'avoir une visualisation 3D pour le client. Il met a jour ses donnes de jeu a partir du serveur. 
 
-#### todo
+_Le network_ : La communication entre le client et le serveur sera faite par des sockets UDP. Le serveur enverra les donnees de jeu au client et recevra les inputs du client.
 
-_Le network_
-
-_Le Controleur de jeu_
+_Le controleur de jeu_ : Il gere les inputs du joueur et les envoie au serveur.
 
 ## Installation des dépendances (SDL2)
 
