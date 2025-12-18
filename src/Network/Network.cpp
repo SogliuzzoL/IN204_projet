@@ -3,10 +3,12 @@
 #include <SDL2/SDL_net.h>
 
 bool Network::initialize() {
-  if (SDLNet_Init() == -1) {
-    return false;
-  }
+  // Initialize SDL_net
+  if (SDLNet_Init() == -1) return false;
   return true;
 }
 
-void Network::quit() { SDLNet_Quit(); }
+void Network::quit() {
+  // Quit SDL_net
+  SDLNet_Quit();
+}

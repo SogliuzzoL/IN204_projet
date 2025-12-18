@@ -25,4 +25,9 @@ class NetworkServer : public Network {
    * Stop the network server.
    */
   void stop() override;
+
+  /**
+   * Handle new incoming connections.
+   */
+  void handleNewConnections();
 };

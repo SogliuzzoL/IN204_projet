@@ -25,6 +25,14 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.$(EXT)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+server: $(EXEC)
+	@echo "Démarrage du serveur..."
+	@$(EXEC) --server
+
+run: $(EXEC)
+	@echo "Démarrage du jeu..."
+	@$(EXEC)
+
 clean:
 	@echo "Nettoyage..."
 	rm -rf $(OBJ_DIR) $(BIN_DIR)

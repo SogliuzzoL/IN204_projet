@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include "Engine/GameWindow.hpp"
+#include "Network/NetworkClient.hpp"
 #include "Network/NetworkServer.hpp"
 
 int main(int argc, char** argv) {
@@ -25,6 +25,13 @@ int main(int argc, char** argv) {
         return -1;
       }
 
+      std::cout << "Server started successfully. Waiting for connections..."
+                << std::endl;
+
+      while (1) {
+        server.handleNewConnections();
+      }
+
       // Stop server
       server.stop();
       // Quit network
@@ -37,14 +44,25 @@ int main(int argc, char** argv) {
   }
 
   // Client Mode
-  GameWindow window(1920, 1080, "DOOM");
-  if (!window.initialize()) {
-    std::cerr << "Failed to initialize the game window." << std::endl;
+  std::cout << "Starting in client mode..." << std::endl;
+
+  NetworkClient client;
+  // Initialize network
+  if (!client.initialize()) {
+    std::cerr << "Failed to initialize network." << std::endl;
     return -1;
   }
-  std::cout << "Game window initialized successfully." << std::endl;
-
-  window.kill();
+  // Start client
+  if (!client.start("localhost", 12345)) {
+    std::cerr << "Failed to start client." << std::endl;
+    client.quit();
+    return -1;
+  }
+  // Stop client
+  client.stop();
+  // Quit network
+  client.quit();
+  std::cout << "Client shut down successfully." << std::endl;
 
   return 0;
 }
