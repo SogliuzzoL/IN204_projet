@@ -1,15 +1,15 @@
 #pragma once
 
-struct GameWindow {
-private:
-  int width;
-  int height;
-  const char *title;
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_rect.h>
 
-public:
-  GameWindow(int w, int h, const char *t) : width(w), height(h), title(t) {}
-  bool initialize();
-  void kill();
-};
+#define WINDOW_WIDTH  800
+#define WINDOW_HEIGHT 600
+#define WINDOW_TITLE  "D00M"
 
-void sdl_test ();
+bool init_sdl(SDL_Window **window, SDL_Renderer **renderer);
+void handle_events(bool *running);
+void render(SDL_Renderer *renderer);
+void cleanup(SDL_Window *window, SDL_Renderer *renderer);
+
+int sdl_test ();

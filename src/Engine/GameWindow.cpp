@@ -1,38 +1,84 @@
 #include "Engine/GameWindow.hpp"
-#include <cstdio>
 #include <SDL2/SDL.h>
 
-void sdl_test () {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        std::fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());
+bool init_sdl(SDL_Window **window, SDL_Renderer **renderer) {
+  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    SDL_Log("SDL_Init Error: %s", SDL_GetError());
+    return false;
+  }
+
+  *window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_CENTERED,
+                             SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH,
+                             WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+
+  if (!*window) {
+    SDL_Log("SDL_CreateWindow Error: %s", SDL_GetError());
+    SDL_Quit();
+    return false;
+  }
+
+  *renderer = SDL_CreateRenderer(
+      *window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
+  if (!*renderer) {
+    SDL_Log("SDL_CreateRenderer Error: %s", SDL_GetError());
+    SDL_DestroyWindow(*window);
+    SDL_Quit();
+    return false;
+  }
+
+  return true;
+}
+
+void handle_events(bool *running) {
+  SDL_Event event;
+
+  while (SDL_PollEvent(&event)) {
+    switch (event.type) {
+    case SDL_QUIT:
+      *running = false;
+      break;
+    default:
+      break;
     }
+  }
+}
 
-    SDL_Window* window = SDL_CreateWindow(
-        "SDL Hello World",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        800,
-        600,
-        SDL_WINDOW_SHOWN
-    );
+void render(SDL_Renderer *renderer) {
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+  SDL_RenderClear(renderer);
 
-    if (!window) {
-        std::fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());
-        SDL_Quit();
-    }
+  SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+  SDL_Rect rect = {100, 100, 50, 50};
+  SDL_RenderDrawRect(renderer, &rect);
 
+  SDL_RenderPresent(renderer);
+}
+
+void cleanup(SDL_Window *window, SDL_Renderer *renderer) {
+  if (renderer)
+    SDL_DestroyRenderer(renderer);
+  if (window)
+    SDL_DestroyWindow(window);
+  SDL_Quit();
+}
+
+int sdl_test() {
+    SDL_Window *window = NULL;
+    SDL_Renderer *renderer = NULL;
     bool running = true;
-    SDL_Event event;
+
+    SDL_SetHint("DOOMSIM", "my_sdl_app");
+
+    if (!init_sdl(&window, &renderer)) {
+        return 1;
+    }
 
     while (running) {
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                running = false;
-            }
-        }
-        SDL_Delay(16); // ~60 FPS idle
+        handle_events(&running);
+        render(renderer);
     }
 
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-};
+    cleanup(window, renderer);
+    return 0;
+}
