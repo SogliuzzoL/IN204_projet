@@ -1,84 +1,96 @@
 #include "Engine/GameWindow.hpp"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
 
-bool init_sdl(SDL_Window **window, SDL_Renderer **renderer) {
+int sdl_test() {
+  SDL_Window *window = NULL;
+  SDL_GLContext gl_ctx;
+  bool running = true;
+
+  if (!init_sdl_gl(&window, &gl_ctx)) {
+    return 1;
+  }
+
+  while (running) {
+    handle_events(&running);
+    render_scene();
+    SDL_GL_SwapWindow(window);
+  }
+
+  cleanup(window, gl_ctx);
+  return 0;
+}
+
+/* ---------- Init ---------- */
+bool init_sdl_gl(SDL_Window **window, SDL_GLContext *gl_ctx) {
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     SDL_Log("SDL_Init Error: %s", SDL_GetError());
     return false;
   }
 
-  *window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_CENTERED,
-                             SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH,
-                             WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+  /* Request OpenGL compatibility profile */
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+  *window = SDL_CreateWindow(
+      "SDL OpenGL 3D", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+      WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
   if (!*window) {
-    SDL_Log("SDL_CreateWindow Error: %s", SDL_GetError());
-    SDL_Quit();
+    SDL_Log("Window Error: %s", SDL_GetError());
     return false;
   }
 
-  *renderer = SDL_CreateRenderer(
-      *window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  *gl_ctx = SDL_GL_CreateContext(*window);
+  SDL_GL_SetSwapInterval(1); // vsync
 
-  if (!*renderer) {
-    SDL_Log("SDL_CreateRenderer Error: %s", SDL_GetError());
-    SDL_DestroyWindow(*window);
-    SDL_Quit();
-    return false;
-  }
+  /* ---------- OpenGL state ---------- */
+  glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+  glEnable(GL_DEPTH_TEST);
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  // gluPerspective(70.0, (double)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1, 100.0);
+
+  glMatrixMode(GL_MODELVIEW);
 
   return true;
 }
 
+/* ---------- Events ---------- */
 void handle_events(bool *running) {
-  SDL_Event event;
-
-  while (SDL_PollEvent(&event)) {
-    switch (event.type) {
-    case SDL_QUIT:
+  SDL_Event e;
+  while (SDL_PollEvent(&e)) {
+    if (e.type == SDL_QUIT)
       *running = false;
-      break;
-    default:
-      break;
-    }
   }
 }
 
-void render(SDL_Renderer *renderer) {
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-  SDL_RenderClear(renderer);
+/* ---------- Render ---------- */
+void render_scene(void) {
+  glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-  SDL_Rect rect = {100, 100, 50, 50};
-  SDL_RenderDrawRect(renderer, &rect);
+  glLoadIdentity();
+  glTranslatef(0.0f, 0.0f, -3.0f);
 
-  SDL_RenderPresent(renderer);
+  glBegin(GL_TRIANGLES);
+  glColor3f(1, 0, 0);
+  glVertex3f(-1, -1, 0);
+
+  glColor3f(0, 1, 0);
+  glVertex3f(1, -1, 0);
+
+  glColor3f(0, 0, 1);
+  glVertex3f(0, 1, 0);
+  glEnd();
 }
 
-void cleanup(SDL_Window *window, SDL_Renderer *renderer) {
-  if (renderer)
-    SDL_DestroyRenderer(renderer);
-  if (window)
-    SDL_DestroyWindow(window);
+/* ---------- Cleanup ---------- */
+void cleanup(SDL_Window *window, SDL_GLContext gl_ctx) {
+  SDL_GL_DeleteContext(gl_ctx);
+  SDL_DestroyWindow(window);
   SDL_Quit();
-}
-
-int sdl_test() {
-    SDL_Window *window = NULL;
-    SDL_Renderer *renderer = NULL;
-    bool running = true;
-
-    SDL_SetHint("DOOMSIM", "my_sdl_app");
-
-    if (!init_sdl(&window, &renderer)) {
-        return 1;
-    }
-
-    while (running) {
-        handle_events(&running);
-        render(renderer);
-    }
-
-    cleanup(window, renderer);
-    return 0;
 }
