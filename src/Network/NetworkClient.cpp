@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+#include "Network/PacketHandler.hpp"
+
 bool NetworkClient::connect(const char* host, int port) {
   // Ouvrir la socket sur un port aléatoire
   clientSocket = SDLNet_UDP_Open(0);
@@ -22,7 +24,7 @@ int NetworkClient::handleIncomingData() {
   // Vérifier les paquets entrants
   if (received) {
     // Traiter le paquet reçu
-    std::cout << "Paquet reçu du serveur | " << packet->data << std::endl;
+    PacketHandler::processPacket(packet->data, packet->len);
   }
   return received;
 }

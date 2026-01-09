@@ -35,8 +35,7 @@ int NetworkServer::handleIncomingData() {
     Uint16 port = SDLNet_Read16(&packet->address.port);
 
     // Process the received packet
-    std::cout << "Paquet reçu de " << senderIP << ":" << port << " | "
-              << packet->data << std::endl;
+    PacketHandler::processPacket(packet->data, packet->len);
 
     // Add new client to the list if not already present
     bool clientExists = false;
