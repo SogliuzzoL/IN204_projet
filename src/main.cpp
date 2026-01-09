@@ -25,16 +25,6 @@ int server() {
   std::cout << "Server started successfully. Waiting for connections..."
             << std::endl;
 
-  int i = 0;
-  while (1) {
-    server.handleIncomingData();
-    if (i % 1000000 == 0) {
-      server.sendData("Hello from server!");
-      i = 0;
-    }
-    i++;
-  }
-
   // Stop server
   server.stop();
   // Quit network
@@ -59,16 +49,6 @@ int client() {
     std::cerr << "Failed to start client." << std::endl;
     client.quit();
     return -1;
-  }
-
-  int i = 0;
-  while (1) {
-    client.handleIncomingData();
-    if (i % 1000000 == 0) {
-      client.sendData("Hello from client!");
-      i = 0;
-    }
-    i++;
   }
 
   // Stop client

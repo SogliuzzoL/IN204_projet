@@ -30,12 +30,12 @@ class NetworkServer : public Network {
    * @return 1 if a new packet is available, or -1 on error. 0 means no packets
    * were currently available.
    */
-  int handleIncomingData();
+  int handleIncomingData() override;
 
   /**
    * Send a message to all connected clients.
    * @param message The message to send.
    * @return true if the message was sent successfully, false otherwise.
    */
-  bool sendData(const std::string& message) override;
+  bool sendData(void* data, int size) override;
 };

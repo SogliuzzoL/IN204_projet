@@ -27,12 +27,11 @@ int NetworkClient::handleIncomingData() {
   return received;
 }
 
-bool NetworkClient::sendData(const std::string& message) {
+bool NetworkClient::sendData(void* data, int size) {
   // Préparation du paquet vers le serveur
   packet->address = serverIP;
-  packet->len = message.length() + 1;
-  memcpy(packet->data, message.c_str(), packet->len);
-
+  packet->len = size;
+  memcpy(packet->data, data, size);
   if (SDLNet_UDP_Send(clientSocket, -1, packet) == 0) return false;
   return true;
 }
