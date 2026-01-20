@@ -6,13 +6,13 @@ int sdl_test() {
   SDL_Window *window = NULL;
   SDL_GLContext gl_ctx;
   bool running = true;
-
+  cam_pos position = {0,0,3};
   if (!init_sdl_gl(&window, &gl_ctx)) {
     return 1;
   }
 
   while (running) {
-    handle_events(&running);
+    handle_events(&running, position);
     render_scene();
     SDL_GL_SwapWindow(window);
   }
@@ -60,13 +60,25 @@ bool init_sdl_gl(SDL_Window **window, SDL_GLContext *gl_ctx) {
 }
 
 /* ---------- Events ---------- */
-void handle_events(bool *running) {
-  SDL_Event e;
-  while (SDL_PollEvent(&e)) {
-    if (e.type == SDL_QUIT)
-      *running = false;
-  }
+void handle_events(bool *running, cam_pos position) {
+    SDL_Event e;
+    const Uint8 *keys = SDL_GetKeyboardState(NULL);
+
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT)
+            *running = false;
+    }
+
+    /* WASD movement */
+    if (keys[SDL_SCANCODE_W]) position.z -= CAM_SPEED;
+    if (keys[SDL_SCANCODE_S]) position.z += CAM_SPEED;
+    if (keys[SDL_SCANCODE_A]) position.x -= CAM_SPEED;
+    if (keys[SDL_SCANCODE_D]) position.x += CAM_SPEED;
+    if (keys[SDL_SCANCODE_SPACE]) position.y += CAM_SPEED;
+    if (keys[SDL_SCANCODE_LCTRL]) position.y -= CAM_SPEED;
+
 }
+
 
 /* ---------- Render ---------- */
 void render_scene(void) {
