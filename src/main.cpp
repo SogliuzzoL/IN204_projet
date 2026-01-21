@@ -1,6 +1,5 @@
+#include "Engine/CameraRendering.hpp"
 #include "Engine/GameWindow.hpp"
-#include <SDL2/SDL_video.h>
-
 
 int main() {
   Uint32 then, frames;

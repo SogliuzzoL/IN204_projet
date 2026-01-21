@@ -15,15 +15,9 @@ typedef struct triangle {
 
 static SDL_GLContext ctx;
 static SDL_Window *window;
+SDL_Window *make_window();
 
 void quit(int rc);
-void Render(triangle t, int w, int h);
 int init_sdl();
-SDL_Window *make_window();
-void rendering_settings();
-
-void check_events(int *done, triangle *t);
-
-void rendering_loop(SDL_GLContext ctx, Uint32 *frames, SDL_Window *window, triangle t);
 
 void timing_info(Uint32 then, Uint32 frames);
