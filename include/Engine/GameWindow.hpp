@@ -1,22 +1,18 @@
 #pragma once
 
+#include <SDL2/SDL_keycode.h>
+#include <math.h>
+#include <stdlib.h>
+
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_opengl.h>
 
+typedef struct triangle{
+    float x,y,angle;
+}triangle;
 
-#define WINDOW_WIDTH  800
-#define WINDOW_HEIGHT 600
-#define CAM_SPEED 0.05
-#define WINDOW_TITLE  "D00M"
+static SDL_GLContext ctx;
+static SDL_Window *window;
 
-typedef struct cam_pos{
-    float x,y,z;
-}cam_pos;
-
-bool init_sdl_gl(SDL_Window **window, SDL_GLContext *gl_ctx);
-void handle_events(bool *running, cam_pos position);
-void render_scene(void);
-void cleanup(SDL_Window *window, SDL_GLContext gl_ctx);
-
-int sdl_test ();
+void quit(int rc);
+void Render(triangle t, int w, int h);
