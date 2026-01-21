@@ -9,9 +9,9 @@
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_video.h>
 
-typedef struct triangle {
+typedef struct player {
   float x, y, angle;
-} triangle;
+} player;
 
 static SDL_GLContext ctx;
 static SDL_Window *window;

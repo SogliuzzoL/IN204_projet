@@ -20,7 +20,7 @@ void SetOrtho(int w, int h) {
   glMatrixMode(GL_MODELVIEW);
 }
 
-void Render(triangle t, int w, int h) {
+void Render(player t, int w, int h) {
   SetOrtho(w, h);
 
   glClearColor(0, 0, 0, 1);
@@ -39,8 +39,9 @@ void Render(triangle t, int w, int h) {
   float htri = s * 0.8660254f;
 
   glBegin(GL_TRIANGLES);
-  glColor3f(1, 1, 1);
+  glColor3f(1, 0, 1);
   glVertex2f(0.0f, 2.0f * htri / 3.0f);
+  glColor3f(1, 1, 1);
   glVertex2f(-s / 2.0f, -htri / 3.0f);
   glVertex2f(s / 2.0f, -htri / 3.0f);
   glEnd();
@@ -57,7 +58,7 @@ void rendering_settings() {
   glShadeModel(GL_SMOOTH);
 }
 void rendering_loop(SDL_GLContext ctx, Uint32 *frames, SDL_Window *window,
-                    triangle t) {
+                    player t) {
   /* Main render loop */
   int done = 0;
 

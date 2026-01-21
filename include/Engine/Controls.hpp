@@ -1,4 +1,9 @@
 #pragma once
 #include "GameWindow.hpp"
 
-void check_events(int *done, triangle *t);
+typedef struct vector2f {
+  float x, y;
+
+} vector2f;
+
+void check_events(int *done, player *t);

@@ -21,8 +21,8 @@ int main() {
 
   frames = 0;
   then = SDL_GetTicks();
-  triangle tri = {0, 0, 0};
-  rendering_loop(ctx, &frames, window, tri);
+  player p = {0, 0, 0};
+  rendering_loop(ctx, &frames, window, p);
   timing_info(then, frames);
   quit(0);
   return 0;
