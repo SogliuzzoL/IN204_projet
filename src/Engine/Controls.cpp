@@ -5,53 +5,35 @@
 const float PI = 3.14159265358979323846f;
 const float step_size = 0.05f;
 
-vector2f dirvec(float angle);
-vector2f dirvec(float angle) {
-  float radians = angle * (PI / 180.0f);
-  return (vector2f){step_size * -sin(radians), step_size * cos(radians)};
-}
-
 void check_events(int *done, player *t) {
-  SDL_Event ev;
-  bool move_event = false;
-  float add_angle = 0;
-  while (SDL_PollEvent(&ev)) {
-    if (ev.type == SDL_KEYDOWN) {
-      switch (ev.key.keysym.sym) {
-        // exiting the window
-      case SDLK_ESCAPE:
-        *done = 1;
-        break;
-        // rotating the player
-      case SDLK_q:
-        t->angle += 5.0f;
-        break;
-      case SDLK_e:
-        t->angle -= 5.0f;
-        break;
-        // going forwards witht the player
-      case SDLK_w:
-        move_event = true;
-        break;
-      case SDLK_s:
-        move_event = true;
-        add_angle = 180;
-        break;
-      case SDLK_a:
-        move_event = true;
-        add_angle = 90;
-        break;
-      case SDLK_d:
-        move_event = true;
-        add_angle = 270;
-        break;
-      }
+    SDL_Event ev;
+
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+
+    // Handle quit-event
+    while (SDL_PollEvent(&ev)) {
+        if (ev.type == SDL_QUIT || (ev.type == SDL_KEYDOWN && ev.key.keysym.sym == SDLK_ESCAPE)) {
+            *done = 1;
+        }
     }
-  }
-  if (move_event) {
-    vector2f dir = dirvec(t->angle + add_angle);
-    t->x += dir.x;
-    t->y += dir.y;
-  }
-  return;
+
+    float rad = t->angle * (PI / 180.0f);
+    
+    vector2f fwd = {-sin(rad), cos(rad)};
+
+    vector2f right = {cos(rad), sin(rad)};
+
+    float moveX = 0;
+    float moveY = 0;
+
+    if (state[SDL_SCANCODE_W]) { moveX += fwd.x; moveY += fwd.y; }
+    if (state[SDL_SCANCODE_S]) { moveX -= fwd.x; moveY -= fwd.y; }
+    if (state[SDL_SCANCODE_A]) { moveX -= right.x;  moveY -= right.y;  } 
+    if (state[SDL_SCANCODE_D]) { moveX += right.x;  moveY += right.y;  }
+
+    t->x += moveX * step_size;
+    t->y += moveY * step_size;
+
+    if (state[SDL_SCANCODE_Q]) t->angle -= 5.0f;
+    if (state[SDL_SCANCODE_E]) t->angle += 5.0f;
 }

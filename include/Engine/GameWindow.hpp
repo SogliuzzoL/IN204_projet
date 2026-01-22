@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keycode.h>
 #include <math.h>
@@ -8,10 +9,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_video.h>
-
-typedef struct player {
-  float x, y, angle;
-} player;
 
 static SDL_GLContext ctx;
 static SDL_Window *window;

@@ -1,5 +1,6 @@
 #include "Engine/CameraRendering.hpp"
 #include "Engine/GameWindow.hpp"
+#include <vector>
 
 int main() {
   Uint32 then, frames;
@@ -22,7 +23,8 @@ int main() {
   frames = 0;
   then = SDL_GetTicks();
   player p = {0, 0, 0};
-  rendering_loop(ctx, &frames, window, p);
+  std::vector<wall> walls = {{0.5,0.5},{0,0.5},{0.5,0.3}};
+  rendering_loop(ctx, &frames, window, p, walls);
   timing_info(then, frames);
   quit(0);
   return 0;
