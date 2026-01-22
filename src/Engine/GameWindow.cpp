@@ -23,6 +23,7 @@ int init_sdl() {
 SDL_Window *make_window() {
   // Create window
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+  SDL_SetRelativeMouseMode(SDL_TRUE);
   window =
       SDL_CreateWindow("in201", SDL_WINDOWPOS_UNDEFINED,
                        SDL_WINDOWPOS_UNDEFINED, 1280, 800, SDL_WINDOW_OPENGL);
@@ -33,7 +34,6 @@ SDL_Window *make_window() {
   }
   return window;
 };
-
 
 void timing_info(Uint32 then, Uint32 frames) {
   /* Print out some timing information */
