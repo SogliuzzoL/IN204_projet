@@ -5,5 +5,5 @@ typedef struct player {
 } player;
 
 typedef struct wall {
-  float x, y;
+  float x1, y1, x2, y2;
 } wall;

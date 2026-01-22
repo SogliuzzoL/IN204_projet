@@ -23,7 +23,7 @@ int main() {
   frames = 0;
   then = SDL_GetTicks();
   player p = {0, 0, 0};
-  std::vector<wall> walls = {{0.5,0.5},{0,0.5},{0.5,0.3}};
+  std::vector<wall> walls = {{0.5,0.5,1,1},{0,0.5,4,2},{0.5,0.3,-1,5}};
   rendering_loop(ctx, &frames, window, p, walls);
   timing_info(then, frames);
   quit(0);
