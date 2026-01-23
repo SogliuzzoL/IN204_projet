@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+#include "Network/PacketHandler.hpp"
+
 bool NetworkServer::start(int port) {
   // Open the server socket
   serverSocket = SDLNet_UDP_Open(port);
@@ -33,8 +35,7 @@ int NetworkServer::handleIncomingData() {
     Uint16 port = SDLNet_Read16(&packet->address.port);
 
     // Process the received packet
-    std::cout << "Paquet reçu de " << senderIP << ":" << port << " | "
-              << packet->data << std::endl;
+    PacketHandler::processPacket(packet->data, packet->len);
 
     // Add new client to the list if not already present
     bool clientExists = false;
@@ -52,15 +53,15 @@ int NetworkServer::handleIncomingData() {
   return received;
 }
 
-bool NetworkServer::sendData(const std::string& message) {
+bool NetworkServer::sendData(void* data, int size) {
   // Send the message to all connected clients
   for (const auto& clientAddr : clients) {
     UDPpacket* sendPacket = SDLNet_AllocPacket(512);
     if (sendPacket == nullptr) return false;
 
     sendPacket->address = clientAddr;
-    sendPacket->len = message.size() + 1;  // +1 for null terminator
-    memcpy(sendPacket->data, message.c_str(), sendPacket->len);
+    sendPacket->len = size;
+    memcpy(sendPacket->data, data, size);
 
     if (SDLNet_UDP_Send(serverSocket, -1, sendPacket) == 0) {
       SDLNet_FreePacket(sendPacket);

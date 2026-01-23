@@ -22,7 +22,7 @@ class Network {
    * @param message The message to send.
    * @return true if the message was sent successfully, false otherwise.
    */
-  virtual bool sendData(const std::string& message) = 0;
+  virtual bool sendData(void* data, int size) = 0;
 
   /**
    * Pure virtual method to stop the network (server or client).

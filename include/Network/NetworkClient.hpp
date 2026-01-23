@@ -33,7 +33,7 @@ class NetworkClient : public Network {
    * @param message The message to send.
    * @return true if the message was sent successfully, false otherwise.
    */
-  bool sendData(const std::string& message) override;
+  bool sendData(void* data, int size) override;
 
   /**
    * Stop the network client.
