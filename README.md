@@ -41,7 +41,8 @@ sudo apt install -y gcc make git \
     libsdl2-net-dev \
     libsdl2-mixer-dev \
     libsdl2-ttf-dev \
-    libsdl2-gfx-dev
+    libsdl2-gfx-dev \
+    libglu1-mesa-dev
 ```
 
 ### Sous Arch Linux
@@ -50,5 +51,5 @@ Ouvrez un terminal et exécutez les commandes suivantes pour mettre à jour votr
 
 ```bash
 sudo pacman -Syu
-sudo pacman -S sdl2 sdl2_image sdl2_mixer sdl2_ttf
+sudo pacman -S sdl2 sdl2_image sdl2_net sdl2_mixer sdl2_ttf sdl2_gfx glu
 ```
