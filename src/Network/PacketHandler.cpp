@@ -1,48 +1,54 @@
 #include "Network/PacketHandler.hpp"
 
+#include <cmath>
 #include <iostream>
 
-void PacketHandler::processPacket(void* data, __u_long size) {
-  if (size < sizeof(PacketHeader)) {
-    // Packet too small to contain a valid header
-    return;
-  }
+#include "server.hpp"
 
+void PacketHandler::processServerPacket(void* data, __u_long size,
+                                        ServerPlayer& player) {
+  if (size < sizeof(PacketHeader)) return;
   PacketHeader* header = static_cast<PacketHeader*>(data);
 
-  switch (header->type) {
-    case PACKET_TYPE_INPUT:
-      if (size >= sizeof(InputPacket)) {
-        handleInputPacket(static_cast<InputPacket*>(data));
-      }
-      break;
-
-    case PACKET_TYPE_WORLD_STATE:
-      if (size >= sizeof(WorldStatePacket)) {
-        handleWorldStatePacket(static_cast<WorldStatePacket*>(data));
-      }
-      break;
-
-    default:
-      // Unknown packet type
-      break;
+  if (header->type == PACKET_TYPE_INPUT) {
+    if (size >= sizeof(InputPacket)) {
+      handleInputPacket(static_cast<InputPacket*>(data), player);
+    }
   }
 }
 
-void PacketHandler::handleInputPacket(InputPacket* packet) {
-  // Process the InputPacket
-  std::cout << "Yaw: " << packet->yaw << ", Pitch: " << packet->pitch
-            << ", Buttons: " << static_cast<int>(packet->inputButtons)
-            << std::endl;
+void PacketHandler::handleInputPacket(InputPacket* packet,
+                                      ServerPlayer& player) {
+  player.yaw = packet->yaw;
+  player.pitch = packet->pitch;
+
+  player.inputButtons = packet->inputButtons;
 }
 
-void PacketHandler::handleWorldStatePacket(WorldStatePacket* packet) {
-  // Process the WorldStatePacket
-  for (uint8_t i = 0; i < packet->entityCount; i++) {
-    Entity& entity = packet->entities[i];
-    std::cout << "Entity ID: " << static_cast<int>(entity.id) << ", Position: ("
-              << entity.x << ", " << entity.y << ")"
-              << ", Yaw: " << entity.yaw << ", Pitch: " << entity.pitch
-              << std::endl;
+// --- CÔTÉ CLIENT ---
+void PacketHandler::processClientPacket(void* data, __u_long size,
+                                        std::vector<Entity>& worldState,
+                                        uint8_t& outMyID) {
+  if (size < sizeof(PacketHeader)) return;
+  PacketHeader* header = static_cast<PacketHeader*>(data);
+
+  if (header->type == PACKET_TYPE_WORLD_STATE) {
+    if (size >= sizeof(PacketHeader) + sizeof(uint8_t)) {
+      handleWorldStatePacket(static_cast<WorldStatePacket*>(data), worldState);
+    }
+  } else if (header->type == PACKET_TYPE_WELCOME) {
+    if (size >= sizeof(WelcomePacket)) {
+      WelcomePacket* wp = static_cast<WelcomePacket*>(data);
+      outMyID = wp->assignedId;
+      std::cout << "ID Reçu du serveur : " << (int)outMyID << std::endl;
+    }
+  }
+}
+
+void PacketHandler::handleWorldStatePacket(WorldStatePacket* packet,
+                                           std::vector<Entity>& worldState) {
+  worldState.clear();
+  for (int i = 0; i < packet->entityCount; i++) {
+    worldState.push_back(packet->entities[i]);
   }
 }

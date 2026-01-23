@@ -4,33 +4,26 @@
 
 class Network {
  public:
-  /**
-   * Initialize the network subsystem.
+  /** Initializes the networking subsystem.
    * @return true if initialization was successful, false otherwise.
    */
   bool initialize();
 
-  /**
-   * Pure virtual method to handle incoming data.
-   * @return 1 if a new packet is available, or -1 on error. 0 means no packets
-   * were currently available.
+  /** Cleans up the networking subsystem.
+   * @return true if cleanup was successful, false otherwise.
    */
   virtual int handleIncomingData() = 0;
 
-  /**
-   * Pure virtual method to send data.
-   * @param message The message to send.
-   * @return true if the message was sent successfully, false otherwise.
+  /** Sends data over the network.
+   * @param data Pointer to the data to send.
+   * @param size Size of the data in bytes.
+   * @return true if the data was sent successfully, false otherwise.
    */
   virtual bool sendData(void* data, int size) = 0;
 
-  /**
-   * Pure virtual method to stop the network (server or client).
-   */
+  /** Stops the network and cleans up resources. */
   virtual void stop() = 0;
 
-  /**
-   * Quit the network subsystem.
-   */
+  /** Quits the networking subsystem. */
   void quit();
 };

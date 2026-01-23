@@ -1,9 +1,11 @@
 #pragma once
-#include "Game_logic.hpp"
+#include <cstdint>
+
 #include "GameWindow.hpp"
+#include "Game_logic.hpp"
 
 typedef struct vector2f {
   float x, y;
 } vector2f;
 
-void check_events(bool *done, player *t);
+uint8_t check_events(bool *done, player *t);

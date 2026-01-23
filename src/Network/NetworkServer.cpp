@@ -1,17 +1,19 @@
 #include "Network/NetworkServer.hpp"
 
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
 
 #include <iostream>
 
+#include "Network/PacketFactory.hpp"
 #include "Network/PacketHandler.hpp"
 
+static uint8_t g_NextPlayerID = 0;
+
 bool NetworkServer::start(int port) {
-  // Open the server socket
   serverSocket = SDLNet_UDP_Open(port);
   if (serverSocket == nullptr) return false;
 
-  // Allocate the packet
   packet = SDLNet_AllocPacket(512);
   if (packet == nullptr) return false;
 
@@ -19,45 +21,77 @@ bool NetworkServer::start(int port) {
 }
 
 void NetworkServer::stop() {
-  // Free the packet
   if (packet != nullptr) SDLNet_FreePacket(packet);
-
-  // Close the server socket
   if (serverSocket != nullptr) SDLNet_UDP_Close(serverSocket);
+}
+
+void NetworkServer::handleNewConnection(uint32_t clientKey, IPaddress& address,
+                                        uint32_t now) {
+  std::cout << "Nouveau joueur connecte (Key: " << clientKey << ")"
+            << std::endl;
+
+  players[clientKey] = ServerPlayer();
+  players[clientKey].id = g_NextPlayerID++;
+  players[clientKey].address = address;
+  players[clientKey].lastSeenTime = now;
+
+  bool exists = false;
+  for (const auto& clientAddr : clients) {
+    if (clientAddr.host == address.host && clientAddr.port == address.port)
+      exists = true;
+  }
+  if (!exists) clients.push_back(address);
+}
+
+void NetworkServer::sendWelcomePacket(IPaddress& address, uint8_t assignedId) {
+  UDPpacket* welcomePkt = SDLNet_AllocPacket(64);
+  if (!welcomePkt) return;
+
+  WelcomePacket* wp = (WelcomePacket*)welcomePkt->data;
+  wp->header.type = PACKET_TYPE_WELCOME;
+  wp->header.sequence = 0;
+  wp->assignedId = assignedId;
+
+  welcomePkt->len = sizeof(WelcomePacket);
+  welcomePkt->address = address;
+
+  SDLNet_UDP_Send(serverSocket, -1, welcomePkt);
+  SDLNet_FreePacket(welcomePkt);
 }
 
 int NetworkServer::handleIncomingData() {
   int received = SDLNet_UDP_Recv(serverSocket, packet);
-  // Check for incoming packets
+
   if (received) {
-    // Get sender's IP address and port
-    const char* senderIP = SDLNet_ResolveIP(&packet->address);
-    Uint16 port = SDLNet_Read16(&packet->address.port);
+    uint32_t clientKey = packet->address.host + packet->address.port;
+    PacketHeader* header = (PacketHeader*)packet->data;
+    uint32_t now = SDL_GetTicks();
 
-    // Process the received packet
-    PacketHandler::processPacket(packet->data, packet->len);
+    if (players.find(clientKey) == players.end()) {
+      handleNewConnection(clientKey, packet->address, now);
+    }
 
-    // Add new client to the list if not already present
-    bool clientExists = false;
-    for (const auto& clientAddr : clients) {
-      if (clientAddr.host == packet->address.host &&
-          clientAddr.port == packet->address.port) {
-        clientExists = true;
-        break;
+    ServerPlayer& currentPlayer = players[clientKey];
+
+    currentPlayer.lastSeenTime = now;
+
+    if (header->type == PACKET_TYPE_INPUT) {
+      InputPacket* input = (InputPacket*)packet->data;
+      if (input->playerId == 255) {
+        sendWelcomePacket(packet->address, currentPlayer.id);
       }
     }
-    if (!clientExists) {
-      clients.push_back(packet->address);
-    }
+
+    PacketHandler::processServerPacket(packet->data, packet->len,
+                                       currentPlayer);
   }
   return received;
 }
 
 bool NetworkServer::sendData(void* data, int size) {
-  // Send the message to all connected clients
   for (const auto& clientAddr : clients) {
     UDPpacket* sendPacket = SDLNet_AllocPacket(512);
-    if (sendPacket == nullptr) return false;
+    if (!sendPacket) return false;
 
     sendPacket->address = clientAddr;
     sendPacket->len = size;
@@ -67,8 +101,36 @@ bool NetworkServer::sendData(void* data, int size) {
       SDLNet_FreePacket(sendPacket);
       return false;
     }
-
     SDLNet_FreePacket(sendPacket);
   }
   return true;
+}
+
+void NetworkServer::checkDisconnects(uint32_t currentTime, uint32_t timeoutMs) {
+  auto it = players.begin();
+  while (it != players.end()) {
+    if (currentTime > it->second.lastSeenTime + timeoutMs) {
+      std::cout << "Deconnexion (Timeout) : " << it->first << std::endl;
+
+      IPaddress deadIP = it->second.address;
+      for (auto vIt = clients.begin(); vIt != clients.end();) {
+        if (vIt->host == deadIP.host && vIt->port == deadIP.port) {
+          vIt = clients.erase(vIt);
+        } else {
+          ++vIt;
+        }
+      }
+      it = players.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
+std::map<uint32_t, ServerPlayer>& NetworkServer::getPlayersMutable() {
+  return players;
+}
+
+const std::map<uint32_t, ServerPlayer>& NetworkServer::getPlayers() {
+  return players;
 }

@@ -1,8 +1,18 @@
 #include "Engine/CameraRendering.hpp"
-#include "Engine/Controls.hpp"
+
 #include <GL/glu.h>
 #include <SDL2/SDL_opengl.h>
+
 #include <vector>
+
+#include "Engine/Controls.hpp"
+#include "Network/NetworkClient.hpp"
+#include "Network/PacketFactory.hpp"
+#include "Network/PacketHandler.hpp"
+
+float __lerp(float current, float target, float factor) {
+  return current + factor * (target - current);
+}
 
 void SetOrtho(int w, int h) {
   float aspect = (float)w / (float)h;
@@ -34,6 +44,14 @@ void draw_player() {
   glEnd();
 }
 
+void draw_enemy(float x, float y, float yaw) {
+  glPushMatrix();
+  glTranslatef(x, y, 0);
+  glRotatef(yaw, 0, 0, 1);
+  draw_cube();
+  glPopMatrix();
+}
+
 void draw_walls(std::vector<wall> walls) {
   glBegin(GL_QUADS);
   glColor3f(1, 1, 1);
@@ -48,55 +66,46 @@ void draw_walls(std::vector<wall> walls) {
 
 void draw_cube() {
   glBegin(GL_QUADS);
-
   // Front Face (Z = 0.5)
-  glColor3f(1.0f, 0.0f, 0.0f); // Red
+  glColor3f(1.0f, 0.0f, 0.0f);
   glVertex3f(-0.5f, -0.5f, 0.5f);
   glVertex3f(0.5f, -0.5f, 0.5f);
   glVertex3f(0.5f, 0.5f, 0.5f);
   glVertex3f(-0.5f, 0.5f, 0.5f);
-
   // Back Face (Z = -0.5)
-  glColor3f(0.0f, 1.0f, 0.0f); // Green
+  glColor3f(0.0f, 1.0f, 0.0f);
   glVertex3f(-0.5f, -0.5f, -0.5f);
   glVertex3f(-0.5f, 0.5f, -0.5f);
   glVertex3f(0.5f, 0.5f, -0.5f);
   glVertex3f(0.5f, -0.5f, -0.5f);
-
   // Top Face (Y = 0.5)
-  glColor3f(0.0f, 0.0f, 1.0f); // Blue
+  glColor3f(0.0f, 0.0f, 1.0f);
   glVertex3f(-0.5f, 0.5f, -0.5f);
   glVertex3f(-0.5f, 0.5f, 0.5f);
   glVertex3f(0.5f, 0.5f, 0.5f);
   glVertex3f(0.5f, 0.5f, -0.5f);
-
   // Bottom Face (Y = -0.5)
-  glColor3f(1.0f, 1.0f, 0.0f); // Yellow
+  glColor3f(1.0f, 1.0f, 0.0f);
   glVertex3f(-0.5f, -0.5f, -0.5f);
   glVertex3f(0.5f, -0.5f, -0.5f);
   glVertex3f(0.5f, -0.5f, 0.5f);
   glVertex3f(-0.5f, -0.5f, 0.5f);
-
   // Right face (X = 0.5)
-  glColor3f(1.0f, 0.0f, 1.0f); // Magenta
+  glColor3f(1.0f, 0.0f, 1.0f);
   glVertex3f(0.5f, -0.5f, -0.5f);
   glVertex3f(0.5f, 0.5f, -0.5f);
   glVertex3f(0.5f, 0.5f, 0.5f);
   glVertex3f(0.5f, -0.5f, 0.5f);
-
   // Left Face (X = -0.5)
-  glColor3f(0.0f, 1.0f, 1.0f); // Cyan
+  glColor3f(0.0f, 1.0f, 1.0f);
   glVertex3f(-0.5f, -0.5f, -0.5f);
   glVertex3f(-0.5f, -0.5f, 0.5f);
   glVertex3f(-0.5f, 0.5f, 0.5f);
   glVertex3f(-0.5f, 0.5f, -0.5f);
-
   glEnd();
 }
 
-
 void rendering_settings() {
-  /* Set rendering settings */
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glMatrixMode(GL_MODELVIEW);
@@ -107,48 +116,92 @@ void rendering_settings() {
 }
 
 void Render(player p, std::vector<wall> walls, int w, int h) {
-  // 1. Perspective Setup
   glViewport(0, 0, w, h);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   float aspect = (float)w / h;
-  // FOV, Aspect, Near, Far
   gluPerspective(45.0f, aspect, 0.1f, 100.0f);
 
-  // 2. Clear buffers
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glEnable(GL_DEPTH_TEST); // IMPORTANT: Stops back faces from drawing over
-                           // front faces
+  glEnable(GL_DEPTH_TEST);
 
-  // 3. Camera (Modelview) Setup
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  // Transform world relative to player
-  // Note: We rotate X so that Z is "Up" and Y is "Forward"
   glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
   glRotatef(-p.angle, 0.0f, 0.0f, 1.0f);
-  glTranslatef(-p.x, -p.y, -2.0f); // -1.0 is player eye height
+  glTranslatef(-p.x, -p.y, -2.0f);
 
-  // 4. Draw the Cube at some world position
   glPushMatrix();
-  glTranslatef(2.0f, 5.0f, 0.5f); // Place cube at (2, 5) on the map
+  glTranslatef(2.0f, 5.0f, 0.5f);
   draw_cube();
   glPopMatrix();
 }
 
-void rendering_loop(SDL_GLContext ctx, Uint32 *frames, SDL_Window *window,
-                    player t, std::vector<wall> walls) {
+void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
+                    player t, std::vector<wall> walls, NetworkClient* client) {
   bool done = 0;
-  bool inMenu = true;
+  std::vector<Entity> otherPlayers;
+  UDPpacket* inputPacket = SDLNet_AllocPacket(512);
+
+  uint8_t myPlayerID = 255;
+  float target_x = t.x;
+  float target_y = t.y;
+
   while (!done) {
     ++(*frames);
-    check_events(&done, &t);
+    uint8_t buttons = check_events(&done, &t);
+
+    if (client) {
+      InputPacket* pkt = (InputPacket*)inputPacket->data;
+      pkt->header.type = PACKET_TYPE_INPUT;
+      pkt->header.sequence = *frames;
+      pkt->playerId = myPlayerID;
+      pkt->yaw = t.angle;
+      pkt->pitch = 0;
+      pkt->inputButtons = buttons;
+      inputPacket->len = sizeof(InputPacket);
+      client->sendData(inputPacket->data, inputPacket->len);
+      while (client->handleIncomingData() > 0) {
+        UDPpacket* p = client->getPacket();
+        PacketHandler::processClientPacket(p->data, p->len, otherPlayers,
+                                           myPlayerID);
+      }
+
+      if (myPlayerID != 255) {
+        for (const auto& entity : otherPlayers) {
+          if (entity.id == myPlayerID) {
+            target_x = entity.x;
+            target_y = entity.y;
+            float dist = (t.x - target_x) * (t.x - target_x) +
+                         (t.y - target_y) * (t.y - target_y);
+            if (dist > 5.0f) {
+              t.x = target_x;
+              t.y = target_y;
+            }
+            break;
+          }
+        }
+      }
+    }
+    float smoothFactor = 0.2f;
+    t.x = __lerp(t.x, target_x, smoothFactor);
+    t.y = __lerp(t.y, target_y, smoothFactor);
+
     int w, h;
     SDL_GL_MakeCurrent(window, ctx);
     SDL_GetWindowSize(window, &w, &h);
     glViewport(0, 0, w, h);
+
     Render(t, walls, w, h);
+
+    for (const auto& entity : otherPlayers) {
+      if (entity.id != myPlayerID) {
+        draw_enemy(entity.x, entity.y, entity.yaw);
+      }
+    }
     SDL_GL_SwapWindow(window);
   }
+
+  if (inputPacket) SDLNet_FreePacket(inputPacket);
 }

@@ -5,25 +5,21 @@
 
 class PacketFactory {
  public:
-  /**
-   * Create an InputPacket.
-   * @param packet The UDP packet to fill.
-   * @param sequence The sequence number of the packet.
-   * @param yaw The yaw of the player.
-   * @param pitch The pitch of the player.
-   * @param inputButtons The input buttons state.
-   * @return A pointer to the created InputPacket.
+  /** Creates an InputPacket and fills the given UDPpacket.
+   * @param packet Pointer to the UDPpacket to fill.
+   * @param sequence Sequence number for the packet.
+   * @param yaw Player's yaw.
+   * @param pitch Player's pitch.
+   * @param inputButtons Bitmask of input buttons pressed.
    */
   static void createInputPacket(UDPpacket* packet, uint32_t sequence, float yaw,
                                 float pitch, uint8_t inputButtons);
 
-  /**
-   * Create a WorldStatePacket.
-   * @param packet The UDP packet to fill.
-   * @param sequence The sequence number of the packet.
-   * @param entities The array of entities in the world.
-   * @param entityCount The number of entities.
-   * @return A pointer to the created WorldStatePacket.
+  /** Creates a WorldStatePacket and fills the given UDPpacket.
+   * @param packet Pointer to the UDPpacket to fill.
+   * @param sequence Sequence number for the packet.
+   * @param entities Array of entities in the world.
+   * @param entityCount Number of entities in the array.
    */
   static void createWorldStatePacket(UDPpacket* packet, uint32_t sequence,
                                      const Entity* entities,

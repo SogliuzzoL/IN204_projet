@@ -1,9 +1,12 @@
 #include "server.hpp"
 
+#include <cmath>
 #include <iostream>
+#include <vector>
 
 #include "Network/NetworkServer.hpp"
 #include "Network/PacketFactory.hpp"
+#include "Network/Protocol.hpp"
 
 int run_server() {
   std::cout << "Starting in server mode..." << std::endl;
@@ -27,17 +30,66 @@ int run_server() {
   uint32_t sequence = 0;
 
   while (true) {
-    server.handleIncomingData();
+    while (server.handleIncomingData() > 0) {
+    }
 
-    if (sequence % 60 == 0) {
-      Entity dummyEntities[1];
-      dummyEntities[0] = {1, 10.5f, -5.0f, 1.57f, 0.0f};
+    server.checkDisconnects(SDL_GetTicks(), 3000);
 
-      PacketFactory::createWorldStatePacket(sendPacket, sequence, dummyEntities,
-                                            1);
+    for (auto& pair : server.getPlayersMutable()) {
+      ServerPlayer& p = pair.second;
+      float moveSpeed = 0.1f;
 
-      server.sendData(sendPacket->data, sendPacket->len);
-      std::cout << "Sent WorldStatePacket seq " << sequence << std::endl;
+      if (p.inputButtons & INPUT_SPRINT) {
+        moveSpeed *= 2.0f;
+      }
+
+      float rad = p.yaw * (3.14159f / 180.0f);
+      float dirX = -sin(rad);
+      float dirY = cos(rad);
+
+      if (p.inputButtons & INPUT_FORWARD) {
+        p.x += dirX * moveSpeed;
+        p.y += dirY * moveSpeed;
+      }
+      if (p.inputButtons & INPUT_BACKWARD) {
+        p.x -= dirX * moveSpeed;
+        p.y -= dirY * moveSpeed;
+      }
+      if (p.inputButtons & INPUT_LEFT) {
+        p.x -= dirY * moveSpeed;
+        p.y += dirX * moveSpeed;
+      }
+      if (p.inputButtons & INPUT_RIGHT) {
+        p.x += dirY * moveSpeed;
+        p.y -= dirX * moveSpeed;
+      }
+    }
+
+    if (sequence % 2 == 0) {
+      const auto& players = server.getPlayers();
+
+      std::vector<Entity> entities;
+      entities.reserve(players.size());
+
+      for (const auto& pair : players) {
+        const ServerPlayer& sp = pair.second;
+        if (sp.id == 255) continue;
+
+        Entity e;
+        e.id = sp.id;
+        e.x = sp.x;
+        e.y = sp.y;
+        e.yaw = sp.yaw;
+        e.pitch = sp.pitch;
+        entities.push_back(e);
+      }
+
+      if (!entities.empty()) {
+        PacketFactory::createWorldStatePacket(
+            sendPacket, sequence, entities.data(),
+            static_cast<uint8_t>(entities.size()));
+        server.sendData(sendPacket->data, sendPacket->len);
+      }
     }
 
     sequence++;
