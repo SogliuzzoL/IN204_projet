@@ -3,7 +3,7 @@ EXEC = bin/game
 CXX = g++
 EXT = cpp
 CXXFLAGS = -Wall -Wextra -std=c++17 -g -Iinclude $(shell sdl2-config --cflags)
-LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image -lSDL2_ttf -lSDL2_mixer -lSDL2_net -lSDL2_gfx
+LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image -lSDL2_ttf -lSDL2_mixer -lSDL2_net -lSDL2_gfx -lSDL2 -lGL -lGLU
 
 SRC_DIR = src
 OBJ_DIR = build
