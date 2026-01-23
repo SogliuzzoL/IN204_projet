@@ -9,7 +9,7 @@
 #include "Network/NetworkClient.hpp"
 #include "Network/PacketFactory.hpp"
 
-int run_client() {
+int run_client(const std::string& serverIP) {
   std::cout << "Starting in client mode..." << std::endl;
 
   Uint32 then, frames;
@@ -35,10 +35,9 @@ int run_client() {
   }
 
   std::cout << "Tentative de connexion au serveur..." << std::endl;
-  if (!client.connect("127.0.0.1", 12345)) {
-    std::cerr
-        << "Erreur : Impossible de se connecter au serveur 127.0.0.1:12345"
-        << std::endl;
+  if (!client.connect(serverIP.c_str(), 12345)) {
+    std::cerr << "Erreur : Impossible de se connecter au serveur " << serverIP
+              << ":12345" << std::endl;
     return 1;
   }
   std::cout << "Connecté au serveur !" << std::endl;
