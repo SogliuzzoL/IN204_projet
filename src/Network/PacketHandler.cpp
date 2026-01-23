@@ -25,7 +25,6 @@ void PacketHandler::handleInputPacket(InputPacket* packet,
   player.inputButtons = packet->inputButtons;
 }
 
-// --- CÔTÉ CLIENT ---
 void PacketHandler::processClientPacket(void* data, __u_long size,
                                         std::vector<Entity>& worldState,
                                         uint8_t& outMyID) {
