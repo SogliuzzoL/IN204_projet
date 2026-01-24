@@ -1,40 +1,58 @@
 #include "Engine/Controls.hpp"
+
+#include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_scancode.h>
+
 #include <cmath>
+
+#include "Engine/Game_logic.hpp"
 
 const float PI = 3.14159265358979323846f;
 const float step_size = 0.1f;
 float mouse_sensitivity = 0.1f;
 bool isPaused = false;
 
-void check_events(bool *done, player *t) {
+void check_events(bool *done, player *t, bool *sel, Game_State *game_state) {
+  const Uint8 *state = SDL_GetKeyboardState(NULL);
   SDL_Event ev;
 
-  const Uint8 *state = SDL_GetKeyboardState(NULL);
-
-  // Handle quit-event
   while (SDL_PollEvent(&ev)) {
-    if (ev.type == SDL_QUIT ||
-        (ev.type == SDL_KEYDOWN && ev.key.keysym.sym == SDLK_ESCAPE)) {
-      *done = 1;
+    // 1. Handle Quit
+    if (ev.type == SDL_QUIT) {
+      *done = true;
     }
-    if (ev.key.keysym.sym == SDLK_p) {
-      isPaused = !(isPaused);
 
-      // Toggle the mouse lock based on pause state
-      if (isPaused) {
-        SDL_SetRelativeMouseMode(SDL_FALSE);
-        SDL_SetWindowGrab(window, SDL_FALSE);
-      } else {
-        SDL_SetRelativeMouseMode(SDL_TRUE);
-        SDL_SetWindowGrab(window, SDL_TRUE);
+    // 2. Handle Key Presses
+    if (ev.type == SDL_KEYDOWN) {
+      switch (ev.key.keysym.sym) {
+        case SDLK_ESCAPE:
+          *done = true;
+          break;
+
+        case SDLK_p:
+          isPaused = !isPaused;
+          SDL_SetRelativeMouseMode(isPaused ? SDL_FALSE : SDL_TRUE);
+          SDL_SetWindowGrab(window, isPaused ? SDL_FALSE : SDL_TRUE);
+          break;
+
+        case SDLK_UP:
+        case SDLK_DOWN:
+          if (*game_state == STATE_MENU) {
+            *sel = !(*sel);  // Correctly toggle the value
+          }
+          break;
+
+        case SDLK_RETURN:
+          if (*game_state == STATE_MENU) {
+            (*sel) ? *game_state = STATE_PLAYING : *done = true;
+          }
+          break;
       }
     }
-    if (ev.type == SDL_MOUSEMOTION) {
-      // Sensitivity factor (adjust to your liking)
 
-      // xrel is the change in mouse X position
+    // 3. Handle Mouse
+    if (ev.type == SDL_MOUSEMOTION && !isPaused) {
       t->angle -= ev.motion.xrel * mouse_sensitivity;
     }
   }
@@ -70,8 +88,6 @@ void check_events(bool *done, player *t) {
   t->x += moveX * step_size * sprint;
   t->y += moveY * step_size * sprint;
 
-  if (state[SDL_SCANCODE_RIGHT])
-    t->angle -= 2.0f;
-  if (state[SDL_SCANCODE_LEFT])
-    t->angle += 2.0f;
+  if (state[SDL_SCANCODE_RIGHT]) t->angle -= 2.0f;
+  if (state[SDL_SCANCODE_LEFT]) t->angle += 2.0f;
 }

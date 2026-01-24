@@ -1,8 +1,16 @@
 #include "Engine/CameraRendering.hpp"
-#include "Engine/Controls.hpp"
+
 #include <GL/glu.h>
 #include <SDL2/SDL_opengl.h>
+
+#include <cstdint>
+#include <iostream>
 #include <vector>
+
+#include "Engine/Controls.hpp"
+#include "Engine/Game_logic.hpp"
+#include "Engine/Maze.hpp"
+#include "Engine/Menu.hpp"
 
 void SetOrtho(int w, int h) {
   float aspect = (float)w / (float)h;
@@ -50,42 +58,42 @@ void draw_cube() {
   glBegin(GL_QUADS);
 
   // Front Face (Z = 0.5)
-  glColor3f(1.0f, 0.0f, 0.0f); // Red
+  glColor3f(1.0f, 0.0f, 0.0f);  // Red
   glVertex3f(-0.5f, -0.5f, 0.5f);
   glVertex3f(0.5f, -0.5f, 0.5f);
   glVertex3f(0.5f, 0.5f, 0.5f);
   glVertex3f(-0.5f, 0.5f, 0.5f);
 
   // Back Face (Z = -0.5)
-  glColor3f(0.0f, 1.0f, 0.0f); // Green
+  glColor3f(0.0f, 1.0f, 0.0f);  // Green
   glVertex3f(-0.5f, -0.5f, -0.5f);
   glVertex3f(-0.5f, 0.5f, -0.5f);
   glVertex3f(0.5f, 0.5f, -0.5f);
   glVertex3f(0.5f, -0.5f, -0.5f);
 
   // Top Face (Y = 0.5)
-  glColor3f(0.0f, 0.0f, 1.0f); // Blue
+  glColor3f(0.0f, 0.0f, 1.0f);  // Blue
   glVertex3f(-0.5f, 0.5f, -0.5f);
   glVertex3f(-0.5f, 0.5f, 0.5f);
   glVertex3f(0.5f, 0.5f, 0.5f);
   glVertex3f(0.5f, 0.5f, -0.5f);
 
   // Bottom Face (Y = -0.5)
-  glColor3f(1.0f, 1.0f, 0.0f); // Yellow
+  glColor3f(1.0f, 1.0f, 0.0f);  // Yellow
   glVertex3f(-0.5f, -0.5f, -0.5f);
   glVertex3f(0.5f, -0.5f, -0.5f);
   glVertex3f(0.5f, -0.5f, 0.5f);
   glVertex3f(-0.5f, -0.5f, 0.5f);
 
   // Right face (X = 0.5)
-  glColor3f(1.0f, 0.0f, 1.0f); // Magenta
+  glColor3f(1.0f, 0.0f, 1.0f);  // Magenta
   glVertex3f(0.5f, -0.5f, -0.5f);
   glVertex3f(0.5f, 0.5f, -0.5f);
   glVertex3f(0.5f, 0.5f, 0.5f);
   glVertex3f(0.5f, -0.5f, 0.5f);
 
   // Left Face (X = -0.5)
-  glColor3f(0.0f, 1.0f, 1.0f); // Cyan
+  glColor3f(0.0f, 1.0f, 1.0f);  // Cyan
   glVertex3f(-0.5f, -0.5f, -0.5f);
   glVertex3f(-0.5f, -0.5f, 0.5f);
   glVertex3f(-0.5f, 0.5f, 0.5f);
@@ -93,7 +101,6 @@ void draw_cube() {
 
   glEnd();
 }
-
 
 void rendering_settings() {
   /* Set rendering settings */
@@ -106,7 +113,8 @@ void rendering_settings() {
   glShadeModel(GL_SMOOTH);
 }
 
-void Render(player p, std::vector<wall> walls, int w, int h) {
+template <size_t Size>
+void Render(player p, std::vector<wall> walls, int w, int h, Maze<Size> &maze) {
   // 1. Perspective Setup
   glViewport(0, 0, w, h);
   glMatrixMode(GL_PROJECTION);
@@ -117,8 +125,8 @@ void Render(player p, std::vector<wall> walls, int w, int h) {
 
   // 2. Clear buffers
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glEnable(GL_DEPTH_TEST); // IMPORTANT: Stops back faces from drawing over
-                           // front faces
+  glEnable(GL_DEPTH_TEST);  // IMPORTANT: Stops back faces from drawing over
+                            // front faces
 
   // 3. Camera (Modelview) Setup
   glMatrixMode(GL_MODELVIEW);
@@ -128,27 +136,63 @@ void Render(player p, std::vector<wall> walls, int w, int h) {
   // Note: We rotate X so that Z is "Up" and Y is "Forward"
   glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
   glRotatef(-p.angle, 0.0f, 0.0f, 1.0f);
-  glTranslatef(-p.x, -p.y, -2.0f); // -1.0 is player eye height
+  glTranslatef(-p.x, -p.y, -2.0f);  // -1.0 is player eye height
 
   // 4. Draw the Cube at some world position
   glPushMatrix();
-  glTranslatef(2.0f, 5.0f, 0.5f); // Place cube at (2, 5) on the map
-  draw_cube();
-  glPopMatrix();
+
+  for (uint32_t y = 0; y < 3*Size; ++y) {
+    for (uint32_t x = 0; x < 3*Size; ++x) {
+      if (!maze.is_open(y, x)) {
+        glPushMatrix();
+        glTranslatef((float)x, (float)y, 1.f);
+        draw_cube();
+        glPopMatrix();
+      }
+    }
+  }
 }
 
 void rendering_loop(SDL_GLContext ctx, Uint32 *frames, SDL_Window *window,
                     player t, std::vector<wall> walls) {
   bool done = 0;
-  bool inMenu = true;
+  Game_State current_state = STATE_PLAYING;
+  int w, h;
+
+  // load textures
+  // In your initialization code:
+  if (!(IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) &
+        (IMG_INIT_JPG | IMG_INIT_PNG))) {
+    printf("IMG_Init Error: %s\n", IMG_GetError());
+  }
+
+  // Now loading is easy:
+  GLuint menuBG = LoadTextureSDL("Assets/menu_back.jpg");
+  GLuint logo = LoadTextureSDL("Assets/doom_menu_buttons.png");
+  bool sel = true;
+  Maze<10> maze;
+  maze.n_shifts(10000);
+
   while (!done) {
     ++(*frames);
-    check_events(&done, &t);
-    int w, h;
     SDL_GL_MakeCurrent(window, ctx);
     SDL_GetWindowSize(window, &w, &h);
     glViewport(0, 0, w, h);
-    Render(t, walls, w, h);
     SDL_GL_SwapWindow(window);
+
+    switch (current_state) {
+      case STATE_PLAYING:
+        check_events(&done, &t, &sel, &current_state);
+        Render(t, walls, w, h, maze);
+        break;
+      case STATE_MENU:
+        check_events(&done, &t, &sel, &current_state);
+        // permet de faire du alpha-blending (superposer des images avec une
+        // alpha channel)
+        Render_Menu(menuBG, logo, sel);
+        break;
+      case STATE_PAUSED:
+        break;
+    }
   }
 }
