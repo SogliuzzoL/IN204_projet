@@ -21,11 +21,6 @@ bool NetworkClient::connect(const char* host, int port) {
 
 int NetworkClient::handleIncomingData() {
   int received = SDLNet_UDP_Recv(clientSocket, packet);
-  // Vérifier les paquets entrants
-  if (received) {
-    // Traiter le paquet reçu
-    PacketHandler::processPacket(packet->data, packet->len);
-  }
   return received;
 }
 

@@ -9,7 +9,7 @@
 #include "Network/NetworkClient.hpp"
 #include "Network/PacketFactory.hpp"
 
-int run_client() {
+int run_client(const std::string& serverIP) {
   std::cout << "Starting in client mode..." << std::endl;
 
   Uint32 then, frames;
@@ -23,19 +23,37 @@ int run_client() {
     return 1;
   }
 
-  // creating new context
   ctx = SDL_GL_CreateContext(window);
   SDL_GL_SetSwapInterval(1);
 
   rendering_settings();
+
+  NetworkClient client;
+  if (!client.initialize()) {
+    std::cerr << "Erreur : Impossible d'initialiser SDL_net." << std::endl;
+    return 1;
+  }
+
+  std::cout << "Tentative de connexion au serveur..." << std::endl;
+  if (!client.connect(serverIP.c_str(), 12345)) {
+    std::cerr << "Erreur : Impossible de se connecter au serveur " << serverIP
+              << ":12345" << std::endl;
+    return 1;
+  }
+  std::cout << "Connecté au serveur !" << std::endl;
 
   frames = 0;
   then = SDL_GetTicks();
   player p = {0, 0, 0};
   std::vector<wall> walls = {
       {0.5, 0.5, 1, 1}, {0, 0.5, 4, 2}, {0.5, 0.3, -1, 5}};
-  rendering_loop(ctx, &frames, window, p, walls);
+
+  rendering_loop(ctx, &frames, window, p, walls, &client);
+
   timing_info(then, frames);
+
+  client.stop();
+  client.quit();
   quit(0);
 
   return 0;

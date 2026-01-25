@@ -1,25 +1,28 @@
 #pragma once
-#include "Network/Protocol.hpp"
+#include <vector>
 
+#include "Network/Protocol.hpp"
+#include "server.hpp"
+
+/**
+ * Handles processing of network packets.
+ */
 class PacketHandler {
  public:
-  /**
-   * Process an incoming packet.
-   * @param data Pointer to the packet data.
-   * @param size Size of the packet data.
-   */
-  static void processPacket(void* data, __u_long size);
+  /** Processes a packet received by the client. */
+  static void processClientPacket(void* data, __u_long size,
+                                  std::vector<Entity>& worldState,
+                                  uint8_t& outMyID);
+
+  /** Processes a packet received by the server. */
+  static void processServerPacket(void* data, __u_long size,
+                                  ServerPlayer& player);
 
  private:
-  /**
-   * Handle an InputPacket.
-   * @param packet Pointer to the InputPacket.
-   */
-  static void handleInputPacket(InputPacket* packet);
+  /** Handles an input packet on the server side. */
+  static void handleInputPacket(InputPacket* packet, ServerPlayer& player);
 
-  /**
-   * Handle a WorldStatePacket.
-   * @param packet Pointer to the WorldStatePacket.
-   */
-  static void handleWorldStatePacket(WorldStatePacket* packet);
+  /** Handles a world state packet on the client side. */
+  static void handleWorldStatePacket(WorldStatePacket* packet,
+                                     std::vector<Entity>& worldState);
 };
