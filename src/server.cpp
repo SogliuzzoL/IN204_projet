@@ -6,19 +6,31 @@
 #include <random>
 #include <vector>
 
+#include "Engine/Maze.hpp"
 #include "Network/NetworkServer.hpp"
 #include "Network/PacketFactory.hpp"
 #include "Network/Protocol.hpp"
 
 uint32_t g_mazeSeed = 0;
 
+/**
+ * Runs the network server for the game.
+ * Initializes the maze, starts a UDP server, and handles player movement
+ * with collision detection against maze walls. Periodically broadcasts world
+ * state to all connected clients.
+ * @return 0 on successful shutdown, -1 on initialization error.
+ */
 int run_server() {
   std::cout << "Starting in server mode..." << std::endl;
 
-  // Générer une seed aléatoire pour le maze
   std::random_device rd;
   g_mazeSeed = rd();
   std::cout << "Seed du maze générée : " << g_mazeSeed << std::endl;
+
+  set_maze_seed(g_mazeSeed);
+  Maze<10> maze;
+  maze.n_shifts(10000);
+  std::cout << "Labyrinthe généré avec taille 10x10" << std::endl;
 
   NetworkServer server;
 
@@ -56,21 +68,50 @@ int run_server() {
       float dirX = -sin(rad);
       float dirY = cos(rad);
 
+      float newX = p.x;
+      float newY = p.y;
+
       if (p.inputButtons & INPUT_FORWARD) {
-        p.x += dirX * moveSpeed;
-        p.y += dirY * moveSpeed;
+        newX += dirX * moveSpeed;
+        newY += dirY * moveSpeed;
       }
       if (p.inputButtons & INPUT_BACKWARD) {
-        p.x -= dirX * moveSpeed;
-        p.y -= dirY * moveSpeed;
+        newX -= dirX * moveSpeed;
+        newY -= dirY * moveSpeed;
       }
       if (p.inputButtons & INPUT_LEFT) {
-        p.x -= dirY * moveSpeed;
-        p.y += dirX * moveSpeed;
+        newX -= dirY * moveSpeed;
+        newY += dirX * moveSpeed;
       }
       if (p.inputButtons & INPUT_RIGHT) {
-        p.x += dirY * moveSpeed;
-        p.y -= dirX * moveSpeed;
+        newX += dirY * moveSpeed;
+        newY -= dirX * moveSpeed;
+      }
+
+      uint32_t mazeSize = 3 * 10;
+
+      auto isPositionValid = [&](float x, float y) -> bool {
+        int32_t gridX = static_cast<int32_t>(std::round(x));
+        int32_t gridY = static_cast<int32_t>(std::round(y));
+
+        if (gridX < 0 || gridX >= static_cast<int32_t>(mazeSize) || gridY < 0 ||
+            gridY >= static_cast<int32_t>(mazeSize)) {
+          return false;
+        }
+
+        return maze.is_open(static_cast<uint32_t>(gridY),
+                            static_cast<uint32_t>(gridX));
+      };
+
+      if (isPositionValid(newX, newY)) {
+        p.x = newX;
+        p.y = newY;
+      } else {
+        if (isPositionValid(newX, p.y)) {
+          p.x = newX;
+        } else if (isPositionValid(p.x, newY)) {
+          p.y = newY;
+        }
       }
     }
 

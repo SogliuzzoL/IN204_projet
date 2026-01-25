@@ -11,8 +11,8 @@ struct ServerPlayer {
   IPaddress address;
   uint32_t lastSeenTime = 0;
 
-  float x = 0;
-  float y = 0;
+  float x = 1;
+  float y = 1;
   float yaw = 0;
   float pitch = 0;
   uint8_t inputButtons = 0;

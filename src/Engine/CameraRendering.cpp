@@ -52,7 +52,7 @@ void draw_player() {
 
 void draw_enemy(float x, float y, float yaw, GLuint ennemyTex) {
   glPushMatrix();
-  glTranslatef(x, y, 0);
+  glTranslatef(x, y, 1.8f);
   glRotatef(yaw, 0, 0, 1);
   draw_cube(ennemyTex);
   glPopMatrix();
@@ -70,12 +70,15 @@ void draw_walls(std::vector<wall> walls) {
   glEnd();
 }
 
+/**
+ * Draws a 3D cube with the given texture.
+ * @param texture OpenGL texture ID to apply to the cube.
+ */
 void draw_cube(GLuint texture) {
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, texture);
   glBegin(GL_QUADS);
   glColor3f(1.0f, 1.0f, 1.0f);
-  // Top Face (Y = 0.5)
   glTexCoord2f(0.0f, 0.0f);
   glVertex3f(-0.5f, 0.5f, -0.5f);
   glTexCoord2f(1.0f, 0.0f);
@@ -84,7 +87,6 @@ void draw_cube(GLuint texture) {
   glVertex3f(0.5f, 0.5f, 0.5f);
   glTexCoord2f(0.0f, 1.0f);
   glVertex3f(0.5f, 0.5f, -0.5f);
-  // Bottom Face (Y = -0.5)
   glTexCoord2f(0.0f, 0.0f);
   glVertex3f(-0.5f, -0.5f, -0.5f);
   glTexCoord2f(1.0f, 0.0f);
@@ -93,7 +95,6 @@ void draw_cube(GLuint texture) {
   glVertex3f(0.5f, -0.5f, 0.5f);
   glTexCoord2f(0.0f, 1.0f);
   glVertex3f(-0.5f, -0.5f, 0.5f);
-  // Right face (X = 0.5)
   glTexCoord2f(0.0f, 0.0f);
   glVertex3f(0.5f, -0.5f, -0.5f);
   glTexCoord2f(1.0f, 0.0f);
@@ -102,7 +103,6 @@ void draw_cube(GLuint texture) {
   glVertex3f(0.5f, 0.5f, 0.5f);
   glTexCoord2f(0.0f, 1.0f);
   glVertex3f(0.5f, -0.5f, 0.5f);
-  // Left Face (X = -0.5)
   glTexCoord2f(0.0f, 0.0f);
   glVertex3f(-0.5f, -0.5f, -0.5f);
   glTexCoord2f(1.0f, 0.0f);
@@ -114,6 +114,10 @@ void draw_cube(GLuint texture) {
   glEnd();
 }
 
+/**
+ * Draws a floor tile with the given texture.
+ * @param floorTex OpenGL texture ID for the floor.
+ */
 void draw_floor(GLuint floorTex) {
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, floorTex);
@@ -142,16 +146,25 @@ void rendering_settings() {
   glShadeModel(GL_SMOOTH);
 }
 
+/**
+ * Renders the game scene with the player, maze walls, and floor.
+ * Sets up perspective projection and renders all visible maze elements.
+ * @param p Player object containing position and angle.
+ * @param walls Vector of wall objects for collision testing.
+ * @param w Window width in pixels.
+ * @param h Window height in pixels.
+ * @param maze Reference to the maze structure.
+ * @param floorTex OpenGL texture ID for floor tiles.
+ * @param wallTex OpenGL texture ID for wall blocks.
+ */
 template <size_t Size>
 void Render(player p, std::vector<wall> walls, int w, int h, Maze<Size>& maze,
             GLuint floorTex, GLuint wallTex) {
-  // Reset OpenGL state from menu
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_ALPHA_TEST);
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // 1. Perspective Setup
   glViewport(0, 0, w, h);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -198,20 +211,29 @@ void Render(player p, std::vector<wall> walls, int w, int h, Maze<Size>& maze,
   glPopMatrix();
 }
 
+/**
+ * Main rendering loop for the game.
+ * Handles input, network communication, maze initialization, and rendering.
+ * @param ctx SDL OpenGL context.
+ * @param frames Pointer to frame counter.
+ * @param window SDL window handle.
+ * @param t Player object for local control.
+ * @param walls Vector of wall objects for environment.
+ * @param client Network client for multiplayer communication, nullptr for solo
+ * mode.
+ */
 void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
                     player t, std::vector<wall> walls, NetworkClient* client) {
   bool done = 0;
   Game_State current_state = STATE_MENU;
   int w, h;
 
-  // Network and local player data
   std::vector<Entity> otherPlayers;
   UDPpacket* inputPacket = SDLNet_AllocPacket(512);
   uint8_t myPlayerID = 255;
   float target_x = t.x;
   float target_y = t.y;
 
-  // Load textures for menu
   if (!(IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) &
         (IMG_INIT_JPG | IMG_INIT_PNG))) {
     printf("IMG_Init Error: %s\n", IMG_GetError());
@@ -222,21 +244,19 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
   GLuint floorTex = LoadTextureSDL("Assets/floor.png");
   GLuint wallTex = LoadTextureSDL("Assets/wallTex.jpg");
   GLuint ennemyTex = LoadTextureSDL("Assets/ennemyTex.jpg");
-  bool sel = true;  // true = New Game, false = Quit
+  bool sel = true;
 
-  // Maze will be initialized once we receive seed from server
   uint32_t mazeSeed = 0;
-  uint32_t receivedSeed = 0;  // Persistent variable to store received seed
+  uint32_t receivedSeed = 0;
   bool mazeInitialized = false;
   Maze<10> maze;
-  uint32_t statePlayingStartTime = 0;  // Pour timeout si pas de seed
+  uint32_t statePlayingStartTime = 0;
 
   while (!done) {
     ++(*frames);
     SDL_GL_MakeCurrent(window, ctx);
     SDL_GetWindowSize(window, &w, &h);
 
-    // Get input
     Game_State prev_state = current_state;
     uint8_t buttons = check_events(&done, &t, &current_state, &sel);
 
@@ -247,7 +267,6 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
       loggedStateChange = true;
     }
 
-    // Initialize maze when starting game (if not already done)
     if (prev_state != STATE_PLAYING && current_state == STATE_PLAYING &&
         !mazeInitialized) {
       statePlayingStartTime = SDL_GetTicks();
@@ -268,7 +287,6 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
       }
     }
 
-    // Timeout: si pas de seed reçue après 500ms, initialiser en solo
     if (client && current_state == STATE_PLAYING && !mazeInitialized &&
         SDL_GetTicks() - statePlayingStartTime > 500) {
       std::cout << "Timeout serveur - Initialisation en mode solo..."
@@ -280,7 +298,6 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
       mazeInitialized = true;
     }
 
-    // Handle network communication (only when playing)
     if (client && current_state == STATE_PLAYING) {
       InputPacket* pkt = (InputPacket*)inputPacket->data;
       pkt->header.type = PACKET_TYPE_INPUT;
@@ -298,7 +315,6 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
                                            myPlayerID, receivedSeed);
       }
 
-      // Initialize/update maze when we receive seed from server
       if (receivedSeed != 0 && receivedSeed != mazeSeed) {
         mazeSeed = receivedSeed;
         set_maze_seed(mazeSeed);
@@ -308,7 +324,6 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
                   << std::endl;
       }
 
-      // Update player position from server
       if (myPlayerID != 255) {
         for (const auto& entity : otherPlayers) {
           if (entity.id == myPlayerID) {
@@ -326,9 +341,7 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
       }
     }
 
-    // Smooth player movement (only when playing)
     if (current_state == STATE_PLAYING) {
-      // Apply local movement in solo mode
       if (!client || !mazeInitialized) {
         float rad = t.angle * (3.14159f / 180.0f);
         float dirX = -sin(rad);
@@ -353,7 +366,6 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
         }
       }
 
-      // Server-based smooth movement (only if connected and maze initialized)
       if (client && mazeInitialized) {
         float smoothFactor = 0.2f;
         t.x = __lerp(t.x, target_x, smoothFactor);
@@ -363,7 +375,6 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
 
     glViewport(0, 0, w, h);
 
-    // Render based on game state
     switch (current_state) {
       case STATE_MENU:
         glViewport(0, 0, w, h);
@@ -375,11 +386,10 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
           Render(t, walls, w, h, maze, floorTex, wallTex);
           for (const auto& entity : otherPlayers) {
             if (entity.id != myPlayerID) {
-              draw_enemy(entity.x, entity.y, entity.yaw,ennemyTex);
+              draw_enemy(entity.x, entity.y, entity.yaw, ennemyTex);
             }
           }
         } else {
-          // Afficher un écran de chargement en attendant la seed
           glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
         break;
