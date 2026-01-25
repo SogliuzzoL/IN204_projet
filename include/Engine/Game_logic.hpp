@@ -12,4 +12,4 @@ typedef enum State {
   STATE_MENU,
   STATE_PLAYING,
   STATE_PAUSED,
-}Game_State; 
+} Game_State;
