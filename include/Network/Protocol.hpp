@@ -9,7 +9,8 @@
 enum PacketType : uint8_t {
   PACKET_TYPE_INPUT,
   PACKET_TYPE_WORLD_STATE,
-  PACKET_TYPE_WELCOME
+  PACKET_TYPE_WELCOME,
+  PACKET_TYPE_SEED
 };
 
 /**
@@ -50,6 +51,14 @@ struct InputPacket {
 struct WelcomePacket {
   PacketHeader header;
   uint8_t assignedId;
+};
+
+/**
+ * Packet sent from server to client containing the maze seed.
+ */
+struct SeedPacket {
+  PacketHeader header;
+  uint32_t seed;
 };
 
 /**

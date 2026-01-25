@@ -38,7 +38,7 @@ std::string to_string(Direction dir) {
 }
 
 Cell::Cell() {
-  for (auto &dir : is_connected) {
+  for (auto& dir : is_connected) {
     dir = false;
   }
 }
@@ -107,11 +107,23 @@ std::string Cell::to_string_rows(size_t row) {
   }
 }
 
+static std::mt19937* maze_gen = nullptr;
+static uint32_t current_seed = 42;
+
+void set_maze_seed(uint32_t seed) {
+  current_seed = seed;
+  if (maze_gen) {
+    delete maze_gen;
+  }
+  maze_gen = new std::mt19937(seed);
+}
+
 Direction pick_random() {
-  static std::random_device rd;
-  static std::mt19937 gen(rd());
+  if (!maze_gen) {
+    maze_gen = new std::mt19937(current_seed);
+  }
   std::uniform_int_distribution<> distr(0, 3);
-  return static_cast<Direction>(distr(gen));
+  return static_cast<Direction>(distr(*maze_gen));
 }
 
 Point Point::shift(Direction direction) {

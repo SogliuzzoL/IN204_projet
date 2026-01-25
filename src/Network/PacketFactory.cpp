@@ -43,3 +43,15 @@ void PacketFactory::createWorldStatePacket(UDPpacket* packet, uint32_t sequence,
 
   packet->len = packetSize;
 }
+
+void PacketFactory::createSeedPacket(UDPpacket* packet, uint32_t sequence,
+                                     uint32_t seed) {
+  SeedPacket seedPacket;
+  seedPacket.header.type = PACKET_TYPE_SEED;
+  seedPacket.header.sequence = sequence;
+  seedPacket.header.timestamp = SDL_GetTicks();
+  seedPacket.seed = seed;
+
+  packet->len = sizeof(SeedPacket);
+  std::memcpy(packet->data, &seedPacket, sizeof(SeedPacket));
+}

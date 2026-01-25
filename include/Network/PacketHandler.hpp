@@ -14,6 +14,11 @@ class PacketHandler {
                                   std::vector<Entity>& worldState,
                                   uint8_t& outMyID);
 
+  /** Processes a packet received by the client (seed variant). */
+  static void processClientPacket(void* data, __u_long size,
+                                  std::vector<Entity>& worldState,
+                                  uint8_t& outMyID, uint32_t& outSeed);
+
   /** Processes a packet received by the server. */
   static void processServerPacket(void* data, __u_long size,
                                   ServerPlayer& player);
@@ -25,4 +30,7 @@ class PacketHandler {
   /** Handles a world state packet on the client side. */
   static void handleWorldStatePacket(WorldStatePacket* packet,
                                      std::vector<Entity>& worldState);
+
+  /** Handles a seed packet on the client side. */
+  static void handleSeedPacket(SeedPacket* packet, uint32_t& outSeed);
 };

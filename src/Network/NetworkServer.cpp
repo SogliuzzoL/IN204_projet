@@ -59,6 +59,22 @@ void NetworkServer::sendWelcomePacket(IPaddress& address, uint8_t assignedId) {
   SDLNet_FreePacket(welcomePkt);
 }
 
+void NetworkServer::sendSeedPacket(IPaddress& address, uint32_t seed) {
+  UDPpacket* seedPkt = SDLNet_AllocPacket(64);
+  if (!seedPkt) return;
+
+  SeedPacket* sp = (SeedPacket*)seedPkt->data;
+  sp->header.type = PACKET_TYPE_SEED;
+  sp->header.sequence = 0;
+  sp->seed = seed;
+
+  seedPkt->len = sizeof(SeedPacket);
+  seedPkt->address = address;
+
+  SDLNet_UDP_Send(serverSocket, -1, seedPkt);
+  SDLNet_FreePacket(seedPkt);
+}
+
 int NetworkServer::handleIncomingData() {
   int received = SDLNet_UDP_Recv(serverSocket, packet);
 
@@ -79,6 +95,9 @@ int NetworkServer::handleIncomingData() {
       InputPacket* input = (InputPacket*)packet->data;
       if (input->playerId == 255) {
         sendWelcomePacket(packet->address, currentPlayer.id);
+        // Send seed packet after welcome
+        extern uint32_t g_mazeSeed;
+        sendSeedPacket(packet->address, g_mazeSeed);
       }
     }
 

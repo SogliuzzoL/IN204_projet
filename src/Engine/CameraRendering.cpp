@@ -176,8 +176,11 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
   GLuint menuBG = LoadTextureSDL("Assets/menu_back.jpg");
   GLuint logo = LoadTextureSDL("Assets/doom_menu_buttons.png");
   bool sel = true;
+
+  // Maze will be initialized once we receive seed from server
+  uint32_t mazeSeed = 0;
+  bool mazeInitialized = false;
   Maze<10> maze;
-  maze.n_shifts(10000);
 
   while (!done) {
     ++(*frames);
@@ -201,8 +204,18 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
 
       while (client->handleIncomingData() > 0) {
         UDPpacket* p = client->getPacket();
+        uint32_t receivedSeed = 0;
         PacketHandler::processClientPacket(p->data, p->len, otherPlayers,
-                                           myPlayerID);
+                                           myPlayerID, receivedSeed);
+
+        // Initialize maze when we receive seed from server
+        if (receivedSeed != 0 && !mazeInitialized) {
+          mazeSeed = receivedSeed;
+          set_maze_seed(mazeSeed);
+          maze.n_shifts(10000);
+          mazeInitialized = true;
+          std::cout << "Maze initialisé avec seed: " << mazeSeed << std::endl;
+        }
       }
 
       // Update player position from server

@@ -30,6 +30,7 @@ struct Cell {
   std::string to_string_rows(size_t row);
 };
 
+void set_maze_seed(uint32_t seed);
 Direction pick_random();
 
 struct Point {
@@ -41,8 +42,8 @@ struct Point {
   std::string to_string();
 };
 
-
-template <size_t Size> struct Maze {
+template <size_t Size>
+struct Maze {
   std::array<std::array<Cell, Size>, Size> rows;
   Point origin;
 
@@ -96,24 +97,24 @@ template <size_t Size> struct Maze {
     }
   }
 
-//   /// @brief Converts this maze to a string
-//   std::string to_string() {
-//     auto ss = std::stringstream();
+  //   /// @brief Converts this maze to a string
+  //   std::string to_string() {
+  //     auto ss = std::stringstream();
 
-//     ss << "\n";
-//     for (int y = 0; y < Size; y++) {
-//       for (int x = 0; x < Size; x++) {
-//         if (y == origin.y && x == origin.x) {
-//           ss << "o";
-//           continue;
-//         }
+  //     ss << "\n";
+  //     for (int y = 0; y < Size; y++) {
+  //       for (int x = 0; x < Size; x++) {
+  //         if (y == origin.y && x == origin.x) {
+  //           ss << "o";
+  //           continue;
+  //         }
 
-//         ss << rows[y][x].to_string();
-//       }
-//       ss << "\n";
-//     }
-//     return ss.str();
-//   }
+  //         ss << rows[y][x].to_string();
+  //       }
+  //       ss << "\n";
+  //     }
+  //     return ss.str();
+  //   }
 
   void pretty_print() {
     for (auto &row : rows) {
@@ -162,41 +163,41 @@ template <size_t Size> struct Maze {
     }
   }
   bool is_open(uint32_t y, uint32_t x) {
-  uint32_t quad_x = x % 3;
-  uint32_t quad_y = y % 3;
+    uint32_t quad_x = x % 3;
+    uint32_t quad_y = y % 3;
 
-  uint32_t cell_x = x / 3;
-  uint32_t cell_y = y / 3;
+    uint32_t cell_x = x / 3;
+    uint32_t cell_y = y / 3;
 
-  Cell &cell = get_cell(Point{x = cell_x, y = cell_y});
-  if ((quad_x == 0) && (quad_y == 0)) {
-    return false;
+    Cell &cell = get_cell(Point{x = cell_x, y = cell_y});
+    if ((quad_x == 0) && (quad_y == 0)) {
+      return false;
+    }
+    if ((quad_x == 1) && (quad_y == 0)) {
+      return cell.exists_connetion(Direction::UP);
+    }
+    if ((quad_x == 2) && (quad_y == 0)) {
+      return false;
+    }
+    if ((quad_x == 0) && (quad_y == 1)) {
+      return cell.exists_connetion(Direction::LEFT);
+    }
+    if ((quad_x == 1) && (quad_y == 1)) {
+      return true;
+    }
+    if ((quad_x == 2) && (quad_y == 1)) {
+      return cell.exists_connetion(Direction::RIGHT);
+    }
+    if ((quad_x == 0) && (quad_y == 2)) {
+      return false;
+    }
+    if ((quad_x == 1) && (quad_y == 2)) {
+      return cell.exists_connetion(Direction::DOWN);
+    }
+    if ((quad_x == 2) && (quad_y == 2)) {
+      return false;
+    }
   }
-  if ((quad_x == 1) && (quad_y == 0)) {
-    return cell.exists_connetion(Direction::UP);
-  }
-  if ((quad_x == 2) && (quad_y == 0)) {
-    return false;
-  }
-  if ((quad_x == 0) && (quad_y == 1)) {
-    return cell.exists_connetion(Direction::LEFT);
-  }
-  if ((quad_x == 1) && (quad_y == 1)) {
-    return true;
-  }
-  if ((quad_x == 2) && (quad_y == 1)) {
-    return cell.exists_connetion(Direction::RIGHT);
-  }
-  if ((quad_x == 0) && (quad_y == 2)) {
-    return false;
-  }
-  if ((quad_x == 1) && (quad_y == 2)) {
-    return cell.exists_connetion(Direction::DOWN);
-  }
-  if ((quad_x == 2) && (quad_y == 2)) {
-    return false;
-  }
-}
 };
 
 // template <size_t Size>

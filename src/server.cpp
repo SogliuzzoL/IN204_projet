@@ -1,15 +1,24 @@
 #include "server.hpp"
 
 #include <cmath>
+#include <ctime>
 #include <iostream>
+#include <random>
 #include <vector>
 
 #include "Network/NetworkServer.hpp"
 #include "Network/PacketFactory.hpp"
 #include "Network/Protocol.hpp"
 
+uint32_t g_mazeSeed = 0;
+
 int run_server() {
   std::cout << "Starting in server mode..." << std::endl;
+
+  // Générer une seed aléatoire pour le maze
+  std::random_device rd;
+  g_mazeSeed = rd();
+  std::cout << "Seed du maze générée : " << g_mazeSeed << std::endl;
 
   NetworkServer server;
 

@@ -18,6 +18,7 @@ class NetworkServer : public Network {
   void handleNewConnection(uint32_t clientKey, IPaddress& address,
                            uint32_t now);
   void sendWelcomePacket(IPaddress& address, uint8_t assignedId);
+  void sendSeedPacket(IPaddress& address, uint32_t seed);
 
  public:
   bool start(int port);

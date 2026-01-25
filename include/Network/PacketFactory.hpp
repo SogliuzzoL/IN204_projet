@@ -24,4 +24,12 @@ class PacketFactory {
   static void createWorldStatePacket(UDPpacket* packet, uint32_t sequence,
                                      const Entity* entities,
                                      uint8_t entityCount);
+
+  /** Creates a SeedPacket and fills the given UDPpacket.
+   * @param packet Pointer to the UDPpacket to fill.
+   * @param sequence Sequence number for the packet.
+   * @param seed The maze seed to send.
+   */
+  static void createSeedPacket(UDPpacket* packet, uint32_t sequence,
+                               uint32_t seed);
 };
