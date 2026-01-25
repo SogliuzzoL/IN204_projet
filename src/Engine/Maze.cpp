@@ -22,6 +22,7 @@ Direction opposite_direction(Direction dir) {
     case Direction::LEFT:
       return Direction::RIGHT;
   }
+  return Direction::UP;  // fallback
 }
 
 std::string to_string(Direction dir) {
@@ -35,6 +36,7 @@ std::string to_string(Direction dir) {
     case Direction::LEFT:
       return "left";
   }
+  return "unknown";  // fallback
 }
 
 Cell::Cell() {
@@ -137,6 +139,7 @@ Point Point::shift(Direction direction) {
     case Direction::LEFT:
       return {x - 1, y};
   }
+  return {x, y};  // fallback
 }
 
 std::string Point::to_string() {

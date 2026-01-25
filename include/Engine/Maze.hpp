@@ -62,7 +62,7 @@ struct Maze {
     }
 
     // close off the ends
-    for (auto i = 0; i < Size; i++) {
+    for (size_t i = 0; i < Size; i++) {
       rows[i][0].set_connection(Direction::LEFT, false);
       rows[i][Size - 1].set_connection(Direction::RIGHT, false);
       rows[i][Size - 1].set_connection(Direction::UP, true);
@@ -139,7 +139,7 @@ struct Maze {
 
   ///@brief shifts the origin n times
   void n_shifts(uint32_t nb_shifts) {
-    for (int i = 0; i < nb_shifts; i++) {
+    for (uint32_t i = 0; i < nb_shifts; i++) {
       shift_origin();
     }
   }

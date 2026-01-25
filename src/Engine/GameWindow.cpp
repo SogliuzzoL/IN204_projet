@@ -1,5 +1,9 @@
 #include "Engine/GameWindow.hpp"
 
+// Define global variables declared as extern in GameWindow.hpp
+SDL_GLContext ctx = nullptr;
+SDL_Window *window = nullptr;
+
 /* Call this instead of exit(), so we can clean up SDL: atexit() is evil. */
 void quit(int rc) {
   if (ctx) {

@@ -160,6 +160,7 @@ void rendering_settings() {
 template <size_t Size>
 void Render(player p, std::vector<wall> walls, int w, int h, Maze<Size>& maze,
             GLuint floorTex, GLuint wallTex) {
+  (void)walls;  // intentionally unused
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_ALPHA_TEST);
   glEnable(GL_DEPTH_TEST);
