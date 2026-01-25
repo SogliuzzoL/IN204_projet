@@ -24,6 +24,35 @@ _Le network_ : La communication entre le client et le serveur sera faite par des
 
 _Le controleur de jeu_ : Il gere les inputs du joueur et les envoie au serveur.
 
+## Structure du code
+
+### Racine
+- **Makefile**: règles de compilation (`make`, `make run`, `make server`, `make clean`).
+- **Assets/**: ressources (images, sons, etc.).
+- **bin/**: exécutable généré (`bin/game`).
+- **build/**: fichiers objets intermédiaires.
+- **include/**: en-têtes C++ (interfaces et types partagés).
+- **src/**: implémentations C++.
+
+### Moteur (Engine)
+- **include/Engine/** et **src/Engine/**:
+    - **GameWindow**: création de la fenêtre SDL + contexte OpenGL, boucle principale, timing.
+    - **CameraRendering**: rendu 2.5D/GL, caméra et pipeline de rendu.
+    - **Controls**: gestion des entrées clavier/souris et conversion en états de jeu.
+    - **Maze**: génération et représentation du labyrinthe (grille, connexions, origine, seed).
+    - **Menu**: interfaces et interactions du menu.
+
+### Réseau (Network)
+- **include/Network/** et **src/Network/**:
+    - **Network**, **NetworkClient**, **NetworkServer**: communication UDP via SDL_net, envoi/réception des paquets.
+    - **Protocol**: types de paquets et formats (`InputPacket`, `WelcomePacket`, `SeedPacket`, `WorldStatePacket`).
+    - **PacketFactory**: création/sérialisation des paquets.
+    - **PacketHandler**: traitement des paquets entrants et mise à jour de l’état du monde.
+
+### Entrées / sorties du programme
+- **src/main.cpp**: point d’entrée; supporte `--server` pour démarrer le serveur.
+- **src/client.cpp**, **src/server.cpp**: logique côté client/serveur.
+
 ## Installation des dépendances (SDL2)
 
 Ce projet nécessite la bibliothèque SDL2 pour fonctionner.
@@ -53,3 +82,28 @@ Ouvrez un terminal et exécutez les commandes suivantes pour mettre à jour votr
 sudo pacman -Syu
 sudo pacman -S sdl2 sdl2_image sdl2_net sdl2_mixer sdl2_ttf sdl2_gfx glu
 ```
+
+## Compilation et exécution
+
+### Compilation
+
+```bash
+make
+```
+
+### Lancer le jeu (client)
+
+```bash
+make run
+# ou directement
+./bin/game
+```
+
+### Lancer le serveur
+
+```bash
+make server
+# ou directement
+./bin/game --server
+```
+
