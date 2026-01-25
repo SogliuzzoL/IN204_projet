@@ -97,24 +97,24 @@ struct Maze {
     }
   }
 
-  //   /// @brief Converts this maze to a string
-  //   std::string to_string() {
-  //     auto ss = std::stringstream();
+    // /// @brief Converts this maze to a string
+    // std::string to_string() {
+    //   auto ss = std::stringstream();
 
-  //     ss << "\n";
-  //     for (int y = 0; y < Size; y++) {
-  //       for (int x = 0; x < Size; x++) {
-  //         if (y == origin.y && x == origin.x) {
-  //           ss << "o";
-  //           continue;
-  //         }
+    //   ss << "\n";
+    //   for (int y = 0; y < Size; y++) {
+    //     for (int x = 0; x < Size; x++) {
+    //       if (y == origin.y && x == origin.x) {
+    //         ss << "o";
+    //         continue;
+    //       }
 
-  //         ss << rows[y][x].to_string();
-  //       }
-  //       ss << "\n";
-  //     }
-  //     return ss.str();
-  //   }
+    //       ss << rows[y][x].to_string();
+    //     }
+    //     ss << "\n";
+    //   }
+    //   return ss.str();
+    // }
 
   void pretty_print() {
     for (auto &row : rows) {
@@ -200,33 +200,3 @@ struct Maze {
     return false;  // Default case
   }
 };
-
-// template <size_t Size>
-// struct Maze {
-//   std::array<std::array<Cell, Size>, Size> rows;
-//   Point origin;
-
-//   Maze();
-
-//   //   TODO COMMENT QUADS ETC
-//   bool is_open(uint32_t y, uint32_t x);
-
-//   /// @brief Returns a new direction for the origin
-//   Direction random_valid_direction();
-
-//   /// @brief Converts this maze to a string
-//   std::string to_string();
-
-//   void pretty_print();
-
-//   Cell &get_origin();
-//   Cell &get_cell(Point p);
-
-//   void update_connections(Direction shift_dir);
-
-//   ///@brief shifts the origin one step
-//   void shift_origin();
-
-//   ///@brief shifts the origin n times
-//   void n_shifts(uint32_t nb_shifts);
-// };

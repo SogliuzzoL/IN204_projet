@@ -77,7 +77,7 @@ void draw_logo() {
   glEnd();
 }
 void draw_heads(bool select) {
-    int y_shift = (select) ? 0:-100;
+  int y_shift = (select) ? 0 : -100;
   glBegin(GL_QUADS);
   glTexCoordPixel(118, 102, 750, 519);
   glVertex2f(280, 350 + y_shift);
@@ -110,7 +110,7 @@ void Render_Menu(GLuint bgTex, GLuint atlasTex, bool new_game_selected) {
   draw_logo();
   draw_new_game();
   draw_quit_game();
-draw_heads(new_game_selected);
+  draw_heads(new_game_selected);
 
   glBindTexture(GL_TEXTURE_2D, bgTex);
 

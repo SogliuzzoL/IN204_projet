@@ -50,11 +50,11 @@ void draw_player() {
   glEnd();
 }
 
-void draw_enemy(float x, float y, float yaw) {
+void draw_enemy(float x, float y, float yaw, GLuint ennemyTex) {
   glPushMatrix();
   glTranslatef(x, y, 0);
   glRotatef(yaw, 0, 0, 1);
-  draw_cube();
+  draw_cube(ennemyTex);
   glPopMatrix();
 }
 
@@ -70,45 +70,65 @@ void draw_walls(std::vector<wall> walls) {
   glEnd();
 }
 
-void draw_cube() {
+void draw_cube(GLuint texture) {
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, texture);
   glBegin(GL_QUADS);
-  // Front Face (Z = 0.5)
-  glColor3f(1.0f, 0.0f, 0.0f);  // Red
-  glVertex3f(-0.5f, -0.5f, 0.5f);
-  glVertex3f(0.5f, -0.5f, 0.5f);
-  glVertex3f(0.5f, 0.5f, 0.5f);
-  glVertex3f(-0.5f, 0.5f, 0.5f);
-  // Back Face (Z = -0.5)
-  glColor3f(0.0f, 1.0f, 0.0f);  // Green
-  glVertex3f(-0.5f, -0.5f, -0.5f);
-  glVertex3f(-0.5f, 0.5f, -0.5f);
-  glVertex3f(0.5f, 0.5f, -0.5f);
-  glVertex3f(0.5f, -0.5f, -0.5f);
+  glColor3f(1.0f, 1.0f, 1.0f);
   // Top Face (Y = 0.5)
-  glColor3f(0.0f, 0.0f, 1.0f);  // Blue
+  glTexCoord2f(0.0f, 0.0f);
   glVertex3f(-0.5f, 0.5f, -0.5f);
+  glTexCoord2f(1.0f, 0.0f);
   glVertex3f(-0.5f, 0.5f, 0.5f);
+  glTexCoord2f(1.0f, 1.0f);
   glVertex3f(0.5f, 0.5f, 0.5f);
+  glTexCoord2f(0.0f, 1.0f);
   glVertex3f(0.5f, 0.5f, -0.5f);
   // Bottom Face (Y = -0.5)
-  glColor3f(1.0f, 1.0f, 0.0f);  // Yellow
+  glTexCoord2f(0.0f, 0.0f);
   glVertex3f(-0.5f, -0.5f, -0.5f);
+  glTexCoord2f(1.0f, 0.0f);
   glVertex3f(0.5f, -0.5f, -0.5f);
+  glTexCoord2f(1.0f, 1.0f);
   glVertex3f(0.5f, -0.5f, 0.5f);
+  glTexCoord2f(0.0f, 1.0f);
   glVertex3f(-0.5f, -0.5f, 0.5f);
   // Right face (X = 0.5)
-  glColor3f(1.0f, 0.0f, 1.0f);  // Magenta
+  glTexCoord2f(0.0f, 0.0f);
   glVertex3f(0.5f, -0.5f, -0.5f);
+  glTexCoord2f(1.0f, 0.0f);
   glVertex3f(0.5f, 0.5f, -0.5f);
+  glTexCoord2f(1.0f, 1.0f);
   glVertex3f(0.5f, 0.5f, 0.5f);
+  glTexCoord2f(0.0f, 1.0f);
   glVertex3f(0.5f, -0.5f, 0.5f);
   // Left Face (X = -0.5)
-  glColor3f(0.0f, 1.0f, 1.0f);  // Cyan
+  glTexCoord2f(0.0f, 0.0f);
   glVertex3f(-0.5f, -0.5f, -0.5f);
+  glTexCoord2f(1.0f, 0.0f);
   glVertex3f(-0.5f, -0.5f, 0.5f);
+  glTexCoord2f(1.0f, 1.0f);
   glVertex3f(-0.5f, 0.5f, 0.5f);
+  glTexCoord2f(0.0f, 1.0f);
   glVertex3f(-0.5f, 0.5f, -0.5f);
   glEnd();
+}
+
+void draw_floor(GLuint floorTex) {
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, floorTex);
+  glBegin(GL_QUADS);
+  glColor3f(1.0f, 1.0f, 1.0f);
+  glTexCoord2f(0.0f, 0.0f);
+  glVertex3f(-0.5f, -0.5f, -0.5f);
+  glTexCoord2f(1.0f, 0.0f);
+  glVertex3f(-0.5f, 0.5f, -0.5f);
+  glTexCoord2f(1.0f, 1.0f);
+  glVertex3f(0.5f, 0.5f, -0.5f);
+  glTexCoord2f(0.0f, 1.0f);
+  glVertex3f(0.5f, -0.5f, -0.5f);
+  glEnd();
+  glDisable(GL_TEXTURE_2D);
 }
 
 void rendering_settings() {
@@ -123,7 +143,8 @@ void rendering_settings() {
 }
 
 template <size_t Size>
-void Render(player p, std::vector<wall> walls, int w, int h, Maze<Size>& maze) {
+void Render(player p, std::vector<wall> walls, int w, int h, Maze<Size>& maze,
+            GLuint floorTex, GLuint wallTex) {
   // Reset OpenGL state from menu
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_ALPHA_TEST);
@@ -153,8 +174,13 @@ void Render(player p, std::vector<wall> walls, int w, int h, Maze<Size>& maze) {
       if (!maze.is_open(y, x)) {
         cubeCount++;
         glPushMatrix();
-        glTranslatef((float)x, (float)y, 1.f);
-        draw_cube();
+        glTranslatef((float)x, (float)y, 1.8f);
+        draw_cube(wallTex);
+        glPopMatrix();
+      } else {
+        glPushMatrix();
+        glTranslatef((float)x, (float)y, 1.8f);
+        draw_floor(floorTex);
         glPopMatrix();
       }
     }
@@ -193,6 +219,9 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
 
   GLuint menuBG = LoadTextureSDL("Assets/menu_back.jpg");
   GLuint logo = LoadTextureSDL("Assets/doom_menu_buttons.png");
+  GLuint floorTex = LoadTextureSDL("Assets/floor.png");
+  GLuint wallTex = LoadTextureSDL("Assets/wallTex.jpg");
+  GLuint ennemyTex = LoadTextureSDL("Assets/ennemyTex.jpg");
   bool sel = true;  // true = New Game, false = Quit
 
   // Maze will be initialized once we receive seed from server
@@ -343,10 +372,10 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
 
       case STATE_PLAYING:
         if (mazeInitialized) {
-          Render(t, walls, w, h, maze);
+          Render(t, walls, w, h, maze, floorTex, wallTex);
           for (const auto& entity : otherPlayers) {
             if (entity.id != myPlayerID) {
-              draw_enemy(entity.x, entity.y, entity.yaw);
+              draw_enemy(entity.x, entity.y, entity.yaw,ennemyTex);
             }
           }
         } else {
@@ -358,7 +387,7 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
       case STATE_PAUSED:
         // Render game in background and pause overlay
         if (mazeInitialized) {
-          Render(t, walls, w, h, maze);
+          Render(t, walls, w, h, maze, floorTex, wallTex);
         }
         break;
     }
