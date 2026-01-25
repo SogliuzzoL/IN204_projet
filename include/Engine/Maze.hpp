@@ -97,25 +97,6 @@ struct Maze {
     }
   }
 
-    // /// @brief Converts this maze to a string
-    // std::string to_string() {
-    //   auto ss = std::stringstream();
-
-    //   ss << "\n";
-    //   for (int y = 0; y < Size; y++) {
-    //     for (int x = 0; x < Size; x++) {
-    //       if (y == origin.y && x == origin.x) {
-    //         ss << "o";
-    //         continue;
-    //       }
-
-    //       ss << rows[y][x].to_string();
-    //     }
-    //     ss << "\n";
-    //   }
-    //   return ss.str();
-    // }
-
   void pretty_print() {
     for (auto &row : rows) {
       for (int i = 0; i < 3; i++) {
