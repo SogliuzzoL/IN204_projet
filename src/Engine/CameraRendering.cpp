@@ -197,8 +197,10 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
 
   // Maze will be initialized once we receive seed from server
   uint32_t mazeSeed = 0;
+  uint32_t receivedSeed = 0;  // Persistent variable to store received seed
   bool mazeInitialized = false;
   Maze<10> maze;
+  uint32_t statePlayingStartTime = 0;  // Pour timeout si pas de seed
 
   while (!done) {
     ++(*frames);
@@ -209,9 +211,19 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
     Game_State prev_state = current_state;
     uint8_t buttons = check_events(&done, &t, &current_state, &sel);
 
+    static bool loggedStateChange = false;
+    if (prev_state != current_state && !loggedStateChange) {
+      std::cout << "État changé: " << (int)prev_state << " -> "
+                << (int)current_state << std::endl;
+      loggedStateChange = true;
+    }
+
     // Initialize maze when starting game (if not already done)
     if (prev_state != STATE_PLAYING && current_state == STATE_PLAYING &&
         !mazeInitialized) {
+      statePlayingStartTime = SDL_GetTicks();
+      std::cout << "Initialisation du maze: client=" << (client ? "oui" : "non")
+                << std::endl;
       if (!client) {
         // Solo mode: use random seed
         std::random_device rd;
@@ -227,6 +239,18 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
       }
     }
 
+    // Timeout: si pas de seed reçue après 500ms, initialiser en solo
+    if (client && current_state == STATE_PLAYING && !mazeInitialized &&
+        SDL_GetTicks() - statePlayingStartTime > 500) {
+      std::cout << "Timeout serveur - Initialisation en mode solo..."
+                << std::endl;
+      std::random_device rd;
+      mazeSeed = rd();
+      set_maze_seed(mazeSeed);
+      maze.n_shifts(10000);
+      mazeInitialized = true;
+    }
+
     // Handle network communication (only when playing)
     if (client && current_state == STATE_PLAYING) {
       InputPacket* pkt = (InputPacket*)inputPacket->data;
@@ -239,20 +263,19 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
       inputPacket->len = sizeof(InputPacket);
       client->sendData(inputPacket->data, inputPacket->len);
 
-      uint32_t receivedSeed = 0;
       while (client->handleIncomingData() > 0) {
         UDPpacket* p = client->getPacket();
         PacketHandler::processClientPacket(p->data, p->len, otherPlayers,
                                            myPlayerID, receivedSeed);
       }
 
-      // Initialize maze when we receive seed from server
-      if (receivedSeed != 0 && !mazeInitialized) {
+      // Initialize/update maze when we receive seed from server
+      if (receivedSeed != 0 && receivedSeed != mazeSeed) {
         mazeSeed = receivedSeed;
         set_maze_seed(mazeSeed);
         maze.n_shifts(10000);
         mazeInitialized = true;
-        std::cout << "Maze initialisé avec seed du serveur: " << mazeSeed
+        std::cout << "Maze mis à jour avec seed du serveur: " << mazeSeed
                   << std::endl;
       }
 
@@ -276,9 +299,37 @@ void rendering_loop(SDL_GLContext ctx, Uint32* frames, SDL_Window* window,
 
     // Smooth player movement (only when playing)
     if (current_state == STATE_PLAYING) {
-      float smoothFactor = 0.2f;
-      t.x = __lerp(t.x, target_x, smoothFactor);
-      t.y = __lerp(t.y, target_y, smoothFactor);
+      // Apply local movement in solo mode
+      if (!client || !mazeInitialized) {
+        float rad = t.angle * (3.14159f / 180.0f);
+        float dirX = -sin(rad);
+        float dirY = cos(rad);
+        float moveSpeed = 0.05f;
+
+        if (buttons & INPUT_FORWARD) {
+          t.x += dirX * moveSpeed;
+          t.y += dirY * moveSpeed;
+        }
+        if (buttons & INPUT_BACKWARD) {
+          t.x -= dirX * moveSpeed;
+          t.y -= dirY * moveSpeed;
+        }
+        if (buttons & INPUT_LEFT) {
+          t.x -= dirY * moveSpeed;
+          t.y += dirX * moveSpeed;
+        }
+        if (buttons & INPUT_RIGHT) {
+          t.x += dirY * moveSpeed;
+          t.y -= dirX * moveSpeed;
+        }
+      }
+
+      // Server-based smooth movement (only if connected and maze initialized)
+      if (client && mazeInitialized) {
+        float smoothFactor = 0.2f;
+        t.x = __lerp(t.x, target_x, smoothFactor);
+        t.y = __lerp(t.y, target_y, smoothFactor);
+      }
     }
 
     glViewport(0, 0, w, h);

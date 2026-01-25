@@ -35,20 +35,23 @@ int run_client(const std::string& serverIP) {
   }
 
   std::cout << "Tentative de connexion au serveur..." << std::endl;
+  NetworkClient* clientPtr = nullptr;
   if (!client.connect(serverIP.c_str(), 12345)) {
-    std::cerr << "Erreur : Impossible de se connecter au serveur " << serverIP
-              << ":12345" << std::endl;
-    return 1;
+    std::cerr << "Avertissement : Impossible de se connecter au serveur "
+              << serverIP << ":12345 - Mode solo activé" << std::endl;
+    clientPtr = nullptr;  // nullptr = mode solo
+  } else {
+    std::cout << "Connecté au serveur !" << std::endl;
+    clientPtr = &client;
   }
-  std::cout << "Connecté au serveur !" << std::endl;
 
   frames = 0;
   then = SDL_GetTicks();
-  player p = {0, 0, 0};
+  player p = {0.0f, 0.0f, 0};
   std::vector<wall> walls = {
       {0.5, 0.5, 1, 1}, {0, 0.5, 4, 2}, {0.5, 0.3, -1, 5}};
 
-  rendering_loop(ctx, &frames, window, p, walls, &client);
+  rendering_loop(ctx, &frames, window, p, walls, clientPtr);
 
   timing_info(then, frames);
 
