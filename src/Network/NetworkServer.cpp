@@ -94,9 +94,13 @@ int NetworkServer::handleIncomingData() {
     if (header->type == PACKET_TYPE_INPUT) {
       InputPacket* input = (InputPacket*)packet->data;
       if (input->playerId == 255) {
+        std::cout << "Nouveau joueur, envoi welcome ID="
+                  << (int)currentPlayer.id << std::endl;
         sendWelcomePacket(packet->address, currentPlayer.id);
         // Send seed packet after welcome
         extern uint32_t g_mazeSeed;
+        std::cout << "Envoi seed=" << g_mazeSeed
+                  << " au joueur ID=" << (int)currentPlayer.id << std::endl;
         sendSeedPacket(packet->address, g_mazeSeed);
       }
     }

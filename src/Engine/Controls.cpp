@@ -14,7 +14,8 @@ const float step_size = 0.1f;
 float mouse_sensitivity = 0.1f;
 bool isPaused = false;
 
-uint8_t check_events(bool *done, player *t, Game_State *game_state) {
+uint8_t check_events(bool *done, player *t, Game_State *game_state,
+                     bool *menu_sel) {
   SDL_Event ev;
   const Uint8 *state = SDL_GetKeyboardState(NULL);
   uint8_t buttons = 0;
@@ -29,12 +30,37 @@ uint8_t check_events(bool *done, player *t, Game_State *game_state) {
     if (ev.type == SDL_KEYDOWN) {
       switch (ev.key.keysym.sym) {
         case SDLK_ESCAPE:
-          *done = true;
+          if (*game_state == STATE_PLAYING) {
+            *game_state = STATE_MENU;
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+          } else {
+            *done = true;
+          }
           break;
 
         case SDLK_p:
-          isPaused = !isPaused;
-          SDL_SetRelativeMouseMode(isPaused ? SDL_FALSE : SDL_TRUE);
+          if (*game_state == STATE_PLAYING) {
+            isPaused = !isPaused;
+            SDL_SetRelativeMouseMode(isPaused ? SDL_FALSE : SDL_TRUE);
+          }
+          break;
+
+        case SDLK_UP:
+        case SDLK_DOWN:
+          if (*game_state == STATE_MENU && menu_sel) {
+            *menu_sel = !(*menu_sel);
+          }
+          break;
+
+        case SDLK_RETURN:
+          if (*game_state == STATE_MENU && menu_sel) {
+            if (*menu_sel) {
+              *game_state = STATE_PLAYING;
+              SDL_SetRelativeMouseMode(SDL_TRUE);
+            } else {
+              *done = true;
+            }
+          }
           break;
       }
     }

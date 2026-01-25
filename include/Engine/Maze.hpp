@@ -169,7 +169,7 @@ struct Maze {
     uint32_t cell_x = x / 3;
     uint32_t cell_y = y / 3;
 
-    Cell &cell = get_cell(Point{x = cell_x, y = cell_y});
+    Cell &cell = get_cell(Point{cell_x, cell_y});
     if ((quad_x == 0) && (quad_y == 0)) {
       return false;
     }
@@ -197,6 +197,7 @@ struct Maze {
     if ((quad_x == 2) && (quad_y == 2)) {
       return false;
     }
+    return false;  // Default case
   }
 };
 
